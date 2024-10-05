@@ -94,7 +94,7 @@ func loadRange(id, start, end, workspace string) (string, error) {
 		return "", err
 	}
 
-	return strings.Join(data, "\n\n"), nil
+	return strings.Join(data, "\n"), nil
 }
 
 func loadAll(id, workspace string) (string, error) {
@@ -108,5 +108,5 @@ func loadAll(id, workspace string) (string, error) {
 		return "", err
 	}
 
-	return strings.Join(data, "\n\n"), nil
+	return strings.Join(data, "\n"), nil
 }
