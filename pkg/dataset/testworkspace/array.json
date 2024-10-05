@@ -1,0 +1,12 @@
+{
+  "data": [
+    "one",
+    "two",
+    ["three"],
+    {
+      "four": true
+    },
+    ["five", 5],
+    6
+  ]
+}

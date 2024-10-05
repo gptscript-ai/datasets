@@ -1,0 +1,6 @@
+{
+  "file": "file_pipe.txt",
+  "gptscriptMetadata": true,
+  "method": "split",
+  "splitter": "|"
+}

@@ -1,0 +1,9 @@
+Name: dataset-context
+Share Tools: * from ../tool.gpt
+
+#!sys.echo
+
+Some of the tools that you call might return a dataset.
+A dataset is represented by a simple JSON string that contains a dataset ID.
+It will look something like {"gptscript_dataset_id": "1234"}.
+You can use the dataset ID to get data from the dataset using the dataset tools.

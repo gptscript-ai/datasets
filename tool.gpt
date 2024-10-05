@@ -1,0 +1,29 @@
+Name: getDatasetInfo
+Description: Gets the information (ID and length) of a dataset
+Param: id: the ID of the dataset
+
+#!${GPTSCRIPT_TOOL_DIR}/bin/gptscript-go-tool info
+
+---
+Name: loadDatasetOne
+Description: Gets one piece of data from a dataset
+Param: id: the ID of the dataset
+Param: index: the index to get
+
+#!${GPTSCRIPT_TOOL_DIR}/bin/gptscript-go-tool load_one
+
+---
+Name: loadDatasetRange
+Description: Gets a range of data from a dataset
+Param: id: the ID of the dataset
+Param: start: the start index
+Param: end: the end index
+
+#!${GPTSCRIPT_TOOL_DIR}/bin/gptscript-go-tool load_range
+
+---
+Name: loadDatasetAll
+Description: Gets all data from a dataset
+Param: id: the ID of the dataset
+
+#!${GPTSCRIPT_TOOL_DIR}/bin/gptscript-go-tool load_all
