@@ -1,29 +1,38 @@
-Name: getDatasetInfo
-Description: Gets the information (ID and length) of a dataset
-Param: id: the ID of the dataset
+Name: List Datasets
+Description: Lists all available datasets
 
-#!${GPTSCRIPT_TOOL_DIR}/bin/gptscript-go-tool info
-
----
-Name: loadDatasetOne
-Description: Gets one piece of data from a dataset
-Param: id: the ID of the dataset
-Param: index: the index to get
-
-#!${GPTSCRIPT_TOOL_DIR}/bin/gptscript-go-tool load_one
+#!${GPTSCRIPT_TOOL_DIR}/bin/gptscript-go-tool listDatasets
 
 ---
-Name: loadDatasetRange
-Description: Gets a range of data from a dataset
-Param: id: the ID of the dataset
-Param: start: the start index
-Param: end: the end index
+Name: List Elements
+Description: Lists metadata for all elements in a dataset
+Param: dataset_id: the ID of the dataset
 
-#!${GPTSCRIPT_TOOL_DIR}/bin/gptscript-go-tool load_range
+#!${GPTSCRIPT_TOOL_DIR}/bin/gptscript-go-tool listElements
 
 ---
-Name: loadDatasetAll
-Description: Gets all data from a dataset
-Param: id: the ID of the dataset
+Name: Get Element
+Description: Gets a particular element's metadata and contents
+Param: dataset_id: the ID of the dataset
+Param: element: the name of the element
 
-#!${GPTSCRIPT_TOOL_DIR}/bin/gptscript-go-tool load_all
+#!${GPTSCRIPT_TOOL_DIR}/bin/gptscript-go-tool getElement
+
+---
+Name: Create Dataset
+Description: Creates a new, empty dataset
+Param: dataset_name: the name of the new dataset
+Param: dataset_description: a description of the new dataset
+
+#!${GPTSCRIPT_TOOL_DIR}/bin/gptscript-go-tool createDataset
+
+---
+Name: Add Element
+Description: Adds a new element to an existing dataset
+Param: dataset_id: the ID of the dataset
+Param: element_name: the name of the new element
+Param: element_description: an optional description of the new element
+Param: element_type: the type of the element (either "string" or "bytes")
+Param: element_content: the data to store in the element
+
+#!${GPTSCRIPT_TOOL_DIR}/bin/gptscript-go-tool addElement

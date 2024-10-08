@@ -1,0 +1,20 @@
+{
+  "id": "two",
+  "name": "two",
+  "description": "The second test dataset",
+  "baseDir": "/Users/grant/devel/datasets/pkg/dataset/testworkspace/datasets/two",
+  "elements": {
+    "file1": {
+      "name": "file1",
+      "description": "the first file",
+      "type": "string",
+      "file": "file1"
+    },
+    "file2": {
+      "name": "file2",
+      "description": "the second file",
+      "type": "string",
+      "file": "file2"
+    }
+  }
+}

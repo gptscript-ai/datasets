@@ -4,222 +4,125 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
-	"strings"
+	"path/filepath"
+
+	"github.com/gptscript-ai/datasets/pkg/util"
 )
 
-type Dataset interface {
-	GetID() string
-	Type() string
-	Length() int
-	Nth(i int) (string, error)
-	Range(i, j int) ([]string, error)
+type DataType string
+
+const (
+	DataTypeString DataType = "string"
+	DataTypeBytes  DataType = "bytes"
+)
+
+func (t DataType) Validate() error {
+	switch t {
+	case DataTypeString, DataTypeBytes:
+		return nil
+	default:
+		return fmt.Errorf("invalid data type: %s", t)
+	}
 }
 
-// ArrayDataset represents an array of generic JSON data.
-type ArrayDataset struct {
-	ID   string
-	Data []any
+type ElementMeta struct {
+	Name        string `json:"name"`
+	Description string `json:"description"`
 }
 
-func (d *ArrayDataset) GetID() string {
+type Element struct {
+	ElementMeta `json:",inline"`
+	Type        DataType `json:"type"`
+	File        string   `json:"file"`
+}
+
+type DatasetMeta struct {
+	ID          string `json:"id"`
+	Name        string `json:"name"`
+	Description string `json:"description"`
+}
+
+type Dataset struct {
+	DatasetMeta `json:",inline"`
+	BaseDir     string             `json:"baseDir,omitempty"`
+	Elements    map[string]Element `json:"elements"`
+}
+
+func (d *Dataset) GetID() string {
 	return d.ID
 }
 
-func (d *ArrayDataset) Type() string {
-	return "array"
+func (d *Dataset) GetName() string {
+	return d.Name
 }
 
-func (d *ArrayDataset) Length() int {
-	return len(d.Data)
+func (d *Dataset) GetDescription() string {
+	return d.Description
 }
 
-func (d *ArrayDataset) Nth(i int) (string, error) {
-	if i < 0 || i >= len(d.Data) {
-		return "", fmt.Errorf("index %d out of bounds for dataset %s", i, d.ID)
+func (d *Dataset) GetLength() int {
+	return len(d.Elements)
+}
+
+func (d *Dataset) ListElements() []ElementMeta {
+	var elements []ElementMeta
+	for _, element := range d.Elements {
+		elements = append(elements, element.ElementMeta)
+	}
+	return elements
+}
+
+func (d *Dataset) GetElement(name string) ([]byte, Element, error) {
+	e, exists := d.Elements[name]
+	if !exists {
+		return nil, Element{}, fmt.Errorf("element %s not found", name)
 	}
 
-	datum, err := json.Marshal(d.Data[i])
+	contents, err := os.ReadFile(d.BaseDir + string(os.PathSeparator) + e.File)
 	if err != nil {
-		return "", fmt.Errorf("error marshalling data at index %d in dataset %s: %v", i, d.ID, err)
+		return nil, Element{}, fmt.Errorf("failed to read element %s: %w", name, err)
 	}
 
-	return string(datum), nil
+	return contents, e, nil
 }
 
-func (d *ArrayDataset) Range(i, j int) ([]string, error) {
-	if i > j {
-		return nil, fmt.Errorf("invalid range %d - %d for dataset %s", i, j, d.ID)
+func (d *Dataset) AddElement(name, description string, t DataType, contents []byte) (Element, error) {
+	if err := t.Validate(); err != nil {
+		return Element{}, err
 	}
 
-	if i < 0 || j >= len(d.Data) {
-		return nil, fmt.Errorf("range %d - %d out of bounds for dataset %s", i, j, d.ID)
+	if _, exists := d.Elements[name]; exists {
+		return Element{}, fmt.Errorf("element %s already exists", name)
 	}
 
-	var data []string
-	for k := i; k <= j; k++ {
-		datum, err := d.Nth(k)
-		if err != nil {
-			return nil, err
-		}
-		data = append(data, datum)
+	fileName := util.EnsureUniqueFilename(d.BaseDir, util.ToFileName(name))
+	loc := filepath.Join(d.BaseDir, fileName)
+	if err := os.WriteFile(loc, contents, 0644); err != nil {
+		return Element{}, fmt.Errorf("failed to write element %s: %w", name, err)
 	}
 
-	return data, nil
-}
-
-// FileDataset represents a single file in the workspace.
-// This dataset supports three different iteration strategies:
-// - LineMethod: each line in the file is a separate piece of data
-// - SplitMethod: the file is split by a delimiter, specified in a metadata file
-// - WholeMethod: the entire file is a single piece of data
-type FileDataset struct {
-	Method       IterationMethod
-	ID, Splitter string
-	Contents     []byte
-}
-
-func (d *FileDataset) GetID() string {
-	return d.ID
-}
-
-func (d *FileDataset) Type() string {
-	return "file"
-}
-
-func (d *FileDataset) Length() int {
-	fileStr := string(d.Contents)
-	switch d.Method {
-	case LineMethod:
-		return len(strings.Split(fileStr, "\n"))
-	case SplitMethod:
-		return len(strings.Split(fileStr, d.Splitter))
-	case WholeMethod:
-		return 1
-	}
-	return 0
-}
-
-func (d *FileDataset) Nth(i int) (string, error) {
-	fileStr := string(d.Contents)
-	switch d.Method {
-	case LineMethod:
-		lines := strings.Split(fileStr, "\n")
-		if i < 0 || i >= len(lines) {
-			return "", fmt.Errorf("index %d out of bounds for dataset %s", i, d.ID)
-		}
-		return lines[i], nil
-	case SplitMethod:
-		parts := strings.Split(fileStr, d.Splitter)
-		if i < 0 || i >= len(parts) {
-			return "", fmt.Errorf("index %d out of bounds for dataset %s", i, d.ID)
-		}
-		return parts[i], nil
-	case WholeMethod:
-		if i > 0 {
-			return "", fmt.Errorf("index %d out of bounds for dataset %s", i, d.ID)
-		}
-		return fileStr, nil
-	}
-	return "", fmt.Errorf("unknown iteration strategy %s for dataset %s", d.Method, d.ID)
-}
-
-func (d *FileDataset) Range(i, j int) ([]string, error) {
-	if i > j {
-		return nil, fmt.Errorf("invalid range %d - %d for dataset %s", i, j, d.ID)
+	e := Element{
+		ElementMeta: ElementMeta{
+			Name:        name,
+			Description: description,
+		},
+		Type: t,
+		File: fileName,
 	}
 
-	fileStr := string(d.Contents)
-	switch d.Method {
-	case LineMethod:
-		lines := strings.Split(fileStr, "\n")
-		if i < 0 || j >= len(lines) {
-			return nil, fmt.Errorf("range %d - %d out of bounds for dataset %s", i, j, d.ID)
-		}
-		return lines[i : j+1], nil
-	case SplitMethod:
-		parts := strings.Split(fileStr, d.Splitter)
-		if i < 0 || j >= len(parts) {
-			return nil, fmt.Errorf("range %d - %d out of bounds for dataset %s", i, j, d.ID)
-		}
-		return parts[i : j+1], nil
-	case WholeMethod:
-		if i > 0 || j > 1 {
-			return nil, fmt.Errorf("range %d - %d out of bounds for dataset %s", i, j, d.ID)
-		}
-		return []string{fileStr}, nil
-	}
-	return nil, fmt.Errorf("unknown iteration strategy %s for dataset %s", d.Method, d.ID)
+	d.Elements[name] = e
+	return e, d.save()
 }
 
-// FolderDataset represents a folder in the workspace, where each file is a single piece of data.
-type FolderDataset struct {
-	ID    string
-	Files []string
-}
-
-func (d *FolderDataset) GetID() string {
-	return d.ID
-}
-
-func (d *FolderDataset) Type() string {
-	return "folder"
-}
-
-func (d *FolderDataset) Length() int {
-	return len(d.Files)
-}
-
-func (d *FolderDataset) Nth(i int) (string, error) {
-	data, _, err := d.nthWithCurrentSize(i, 0)
-	return data, err
-}
-
-func (d *FolderDataset) nthWithCurrentSize(i int, currentSize int64) (string, int64, error) {
-	if i < 0 || i >= len(d.Files) {
-		return "", 0, fmt.Errorf("index %d out of bounds for dataset %s", i, d.ID)
-	}
-
-	fileName := d.Files[i]
-	fileStat, err := os.Stat(fileName)
+func (d *Dataset) save() error {
+	datasetJSON, err := json.Marshal(d)
 	if err != nil {
-		return "", 0, fmt.Errorf("error getting info for file %s: %v", fileName, err)
+		return fmt.Errorf("failed to marshal dataset: %w", err)
 	}
 
-	if fileStat.Size()+currentSize > 100*1024*1024 { // 100 MiB
-		return "", 0, fmt.Errorf("dataset %s is too large to read (combined file size must be under 100 MiB)", d.ID)
-	}
-	currentSize += fileStat.Size()
-
-	contents, err := os.ReadFile(fileName)
-	if err != nil {
-		return "", 0, fmt.Errorf("error reading file %s: %v", fileName, err)
+	if err := os.WriteFile(d.BaseDir+extension, datasetJSON, 0644); err != nil {
+		return fmt.Errorf("failed to write dataset file: %w", err)
 	}
 
-	return string(contents), currentSize, nil
-}
-
-func (d *FolderDataset) Range(i, j int) ([]string, error) {
-	if i > j {
-		return nil, fmt.Errorf("invalid range %d - %d for dataset %s", i, j, d.ID)
-	}
-
-	if i < 0 || j >= len(d.Files) {
-		return nil, fmt.Errorf("range %d - %d out of bounds for dataset %s", i, j, d.ID)
-	}
-
-	var (
-		data     []string
-		contents string
-		size     int64
-		err      error
-	)
-	for k := i; k <= j; k++ {
-		contents, size, err = d.nthWithCurrentSize(k, size)
-		if err != nil {
-			return nil, err
-		}
-		data = append(data, contents)
-	}
-
-	return data, nil
+	return nil
 }
