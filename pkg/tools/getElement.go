@@ -54,5 +54,5 @@ func GetElement(workspace, datasetID, elementName string) {
 		os.Exit(1)
 	}
 
-	print(string(elementJSON))
+	fmt.Print(string(elementJSON))
 }
