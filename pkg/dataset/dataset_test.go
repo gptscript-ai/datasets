@@ -31,14 +31,12 @@ func TestDatasetsRead(t *testing.T) {
 	oneMetas := datasetOne.ListElements()
 	require.Len(t, oneMetas, 2)
 
-	oneOneBytes, oneOne, err := datasetOne.GetElement("file1")
+	oneOneBytes, _, err := datasetOne.GetElement("file1")
 	require.NoError(t, err)
-	require.Equal(t, oneOne.Type, DataTypeString)
 	require.Equal(t, "This is dataset 1, file 1.\n", string(oneOneBytes))
 
-	oneTwoBytes, oneTwo, err := datasetOne.GetElement("file2")
+	oneTwoBytes, _, err := datasetOne.GetElement("file2")
 	require.NoError(t, err)
-	require.Equal(t, oneTwo.Type, DataTypeString)
 	require.Equal(t, "This is dataset 1, file 2.\n", string(oneTwoBytes))
 
 	datasetTwo, err := m.GetDataset("two")
@@ -50,14 +48,12 @@ func TestDatasetsRead(t *testing.T) {
 	twoMetas := datasetTwo.ListElements()
 	require.Len(t, twoMetas, 2)
 
-	twoOneBytes, twoOne, err := datasetTwo.GetElement("file1")
+	twoOneBytes, _, err := datasetTwo.GetElement("file1")
 	require.NoError(t, err)
-	require.Equal(t, twoOne.Type, DataTypeString)
 	require.Equal(t, "This is dataset 2, file 1.\n", string(twoOneBytes))
 
-	twoTwoBytes, twoTwo, err := datasetTwo.GetElement("file2")
+	twoTwoBytes, _, err := datasetTwo.GetElement("file2")
 	require.NoError(t, err)
-	require.Equal(t, twoTwo.Type, DataTypeString)
 	require.Equal(t, "This is dataset 2, file 2.\n", string(twoTwoBytes))
 }
 
@@ -87,11 +83,11 @@ func TestDatasetWrite(t *testing.T) {
 	require.Equal(t, 0, datasetThree.GetLength())
 
 	// Let's add a couple elements.
-	_, err = datasetThree.AddElement("file1", "The first file", DataTypeString, []byte("This is dataset 3, file 1.\n"))
+	_, err = datasetThree.AddElement("file1", "The first file", []byte("This is dataset 3, file 1.\n"))
 	require.NoError(t, err)
 	require.Equal(t, 1, datasetThree.GetLength())
 
-	_, err = datasetThree.AddElement("file2", "The second file", DataTypeString, []byte("This is dataset 3, file 2.\n"))
+	_, err = datasetThree.AddElement("file2", "The second file", []byte("This is dataset 3, file 2.\n"))
 	require.NoError(t, err)
 	require.Equal(t, 2, datasetThree.GetLength())
 
@@ -104,13 +100,11 @@ func TestDatasetWrite(t *testing.T) {
 	threeMetas := datasetThree.ListElements()
 	require.Len(t, threeMetas, 2)
 
-	threeOneBytes, threeOne, err := datasetThree.GetElement("file1")
+	threeOneBytes, _, err := datasetThree.GetElement("file1")
 	require.NoError(t, err)
-	require.Equal(t, threeOne.Type, DataTypeString)
 	require.Equal(t, "This is dataset 3, file 1.\n", string(threeOneBytes))
 
-	threeTwoBytes, threeTwo, err := datasetThree.GetElement("file2")
+	threeTwoBytes, _, err := datasetThree.GetElement("file2")
 	require.NoError(t, err)
-	require.Equal(t, threeTwo.Type, DataTypeString)
 	require.Equal(t, "This is dataset 3, file 2.\n", string(threeTwoBytes))
 }

@@ -8,7 +8,7 @@ import (
 	"github.com/gptscript-ai/datasets/pkg/dataset"
 )
 
-func AddElement(workspace, datasetID, name, description, t string, content []byte) {
+func AddElement(workspace, datasetID, name, description string, content []byte) {
 	m, err := dataset.NewManager(workspace)
 	if err != nil {
 		fmt.Printf("failed to create dataset manager: %v\n", err)
@@ -21,7 +21,7 @@ func AddElement(workspace, datasetID, name, description, t string, content []byt
 		os.Exit(1)
 	}
 
-	e, err := d.AddElement(name, description, dataset.DataType(t), content)
+	e, err := d.AddElement(name, description, content)
 	if err != nil {
 		fmt.Printf("failed to create element: %v\n", err)
 		os.Exit(1)

@@ -29,6 +29,6 @@ func main() {
 	case "createDataset":
 		tools.CreateDataset(workspace, os.Getenv("DATASET_NAME"), os.Getenv("DATASET_DESCRIPTION"))
 	case "addElement":
-		tools.AddElement(workspace, os.Getenv("DATASET_ID"), os.Getenv("ELEMENT_NAME"), os.Getenv("ELEMENT_DESCRIPTION"), os.Getenv("ELEMENT_TYPE"), []byte(os.Getenv("ELEMENT_CONTENT")))
+		tools.AddElement(workspace, os.Getenv("DATASET_ID"), os.Getenv("ELEMENT_NAME"), os.Getenv("ELEMENT_DESCRIPTION"), []byte(os.Getenv("ELEMENT_CONTENT")))
 	}
 }

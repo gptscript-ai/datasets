@@ -9,22 +9,6 @@ import (
 	"github.com/gptscript-ai/datasets/pkg/util"
 )
 
-type DataType string
-
-const (
-	DataTypeString DataType = "string"
-	DataTypeBytes  DataType = "bytes"
-)
-
-func (t DataType) Validate() error {
-	switch t {
-	case DataTypeString, DataTypeBytes:
-		return nil
-	default:
-		return fmt.Errorf("invalid data type: %s", t)
-	}
-}
-
 type ElementMeta struct {
 	Name        string `json:"name"`
 	Description string `json:"description"`
@@ -32,8 +16,7 @@ type ElementMeta struct {
 
 type Element struct {
 	ElementMeta `json:",inline"`
-	Type        DataType `json:"type"`
-	File        string   `json:"file"`
+	File        string `json:"file"`
 }
 
 type DatasetMeta struct {
@@ -86,11 +69,7 @@ func (d *Dataset) GetElement(name string) ([]byte, Element, error) {
 	return contents, e, nil
 }
 
-func (d *Dataset) AddElement(name, description string, t DataType, contents []byte) (Element, error) {
-	if err := t.Validate(); err != nil {
-		return Element{}, err
-	}
-
+func (d *Dataset) AddElement(name, description string, contents []byte) (Element, error) {
 	if _, exists := d.Elements[name]; exists {
 		return Element{}, fmt.Errorf("element %s already exists", name)
 	}
@@ -106,7 +85,6 @@ func (d *Dataset) AddElement(name, description string, t DataType, contents []by
 			Name:        name,
 			Description: description,
 		},
-		Type: t,
 		File: fileName,
 	}
 

@@ -1,7 +1,6 @@
 package tools
 
 import (
-	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"os"
@@ -10,11 +9,9 @@ import (
 )
 
 type elem struct {
-	Contents       string `json:"contents,omitempty"`
-	ContentsBase64 string `json:"contents_base64,omitempty"`
-	Type           string `json:"type"`
-	Name           string `json:"name"`
-	Description    string `json:"description,omitempty"`
+	Contents    string `json:"contents,omitempty"`
+	Name        string `json:"name"`
+	Description string `json:"description,omitempty"`
 }
 
 func GetElement(workspace, datasetID, elementName string) {
@@ -37,15 +34,9 @@ func GetElement(workspace, datasetID, elementName string) {
 	}
 
 	element := elem{
-		Type:        string(e.Type),
+		Contents:    string(elementContents),
 		Name:        e.Name,
 		Description: e.Description,
-	}
-
-	if e.Type == dataset.DataTypeBytes {
-		element.ContentsBase64 = base64.StdEncoding.EncodeToString(elementContents)
-	} else {
-		element.Contents = string(elementContents)
 	}
 
 	elementJSON, err := json.Marshal(element)

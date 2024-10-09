@@ -32,7 +32,6 @@ Description: Adds a new element to an existing dataset
 Param: dataset_id: the ID of the dataset
 Param: element_name: the name of the new element
 Param: element_description: an optional description of the new element
-Param: element_type: the type of the element (either "string" or "bytes")
 Param: element_content: the data to store in the element
 
 #!${GPTSCRIPT_TOOL_DIR}/bin/gptscript-go-tool addElement
