@@ -9,8 +9,9 @@ import (
 
 func main() {
 	if len(os.Args) < 2 {
-		fmt.Println("missing argument")
-		os.Exit(1)
+		fmt.Println(`usage: gptscript-go-tool <command>
+subcommands: listDatasets, listElements, getElement, createDataset, addElement
+env vars: `)
 	}
 
 	workspace := os.Getenv("GPTSCRIPT_WORKSPACE_DIR")
