@@ -22,7 +22,7 @@ type Manager struct {
 func NewManager(workspaceDir string) (Manager, error) {
 	datasetDir := filepath.Join(workspaceDir, datasets)
 	if _, err := os.Stat(datasetDir); os.IsNotExist(err) {
-		if err := os.Mkdir(datasetDir, 0755); err != nil {
+		if err := os.MkdirAll(datasetDir, 0755); err != nil {
 			return Manager{}, fmt.Errorf("failed to create dataset directory: %w", err)
 		}
 	}
@@ -61,7 +61,11 @@ func (m *Manager) NewDataset(name, description string) (Dataset, error) {
 	}
 
 	id := fmt.Sprintf("%x", randBytes)
-	dirName := util.EnsureUniqueFilename(m.datasetDir, util.ToFileName(name))
+	dirName, err := util.EnsureUniqueFilename(m.datasetDir, util.ToFileName(name))
+	if err != nil {
+		return Dataset{}, fmt.Errorf("failed to ensure unique filename: %w", err)
+	}
+
 	baseDir := filepath.Join(m.datasetDir, dirName)
 	if err := os.Mkdir(baseDir, 0755); err != nil {
 		return Dataset{}, fmt.Errorf("failed to create dataset directory: %w", err)

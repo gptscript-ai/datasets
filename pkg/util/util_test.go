@@ -61,11 +61,22 @@ func TestEnsureUniqueFilename(t *testing.T) {
 		_ = os.RemoveAll(base)
 	})
 
-	require.Equal(t, "test_", EnsureUniqueFilename(base, "test_"))
-	_ = os.WriteFile(filepath.Join(base, "test_"), []byte{}, 0644)
-	require.Equal(t, "test__", EnsureUniqueFilename(base, "test_"))
-	_ = os.WriteFile(filepath.Join(base, "test__"), []byte{}, 0644)
-	require.Equal(t, "test___", EnsureUniqueFilename(base, "test_"))
-	_ = os.WriteFile(filepath.Join(base, "test___"), []byte{}, 0644)
-	require.Equal(t, "test____", EnsureUniqueFilename(base, "test_"))
+	name, err := EnsureUniqueFilename(base, "test")
+	require.NoError(t, err)
+	require.Equal(t, "test", name)
+	_ = os.WriteFile(filepath.Join(base, "test"), []byte{}, 0644)
+
+	name, err = EnsureUniqueFilename(base, "test")
+	require.NoError(t, err)
+	require.Equal(t, "test_1", name)
+	_ = os.WriteFile(filepath.Join(base, "test_1"), []byte{}, 0644)
+
+	name, err = EnsureUniqueFilename(base, "test")
+	require.NoError(t, err)
+	require.Equal(t, "test_2", name)
+	_ = os.WriteFile(filepath.Join(base, "test_2"), []byte{}, 0644)
+
+	name, err = EnsureUniqueFilename(base, "test")
+	require.NoError(t, err)
+	require.Equal(t, "test_3", name)
 }

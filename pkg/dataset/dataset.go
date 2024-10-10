@@ -74,7 +74,11 @@ func (d *Dataset) AddElement(name, description string, contents []byte) (Element
 		return Element{}, fmt.Errorf("element %s already exists", name)
 	}
 
-	fileName := util.EnsureUniqueFilename(d.BaseDir, util.ToFileName(name))
+	fileName, err := util.EnsureUniqueFilename(d.BaseDir, util.ToFileName(name))
+	if err != nil {
+		return Element{}, fmt.Errorf("failed to generate unique file name: %w", err)
+	}
+
 	loc := filepath.Join(d.BaseDir, fileName)
 	if err := os.WriteFile(loc, contents, 0644); err != nil {
 		return Element{}, fmt.Errorf("failed to write element %s: %w", name, err)

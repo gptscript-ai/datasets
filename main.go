@@ -11,7 +11,7 @@ func main() {
 	if len(os.Args) < 2 {
 		fmt.Println(`usage: gptscript-go-tool <command>
 subcommands: listDatasets, listElements, getElement, createDataset, addElement
-env vars: `)
+env vars: GPTSCRIPT_WORKSPACE_DIR`)
 	}
 
 	workspace := os.Getenv("GPTSCRIPT_WORKSPACE_DIR")
@@ -31,5 +31,8 @@ env vars: `)
 		tools.CreateDataset(workspace, os.Getenv("DATASET_NAME"), os.Getenv("DATASET_DESCRIPTION"))
 	case "addElement":
 		tools.AddElement(workspace, os.Getenv("DATASET_ID"), os.Getenv("ELEMENT_NAME"), os.Getenv("ELEMENT_DESCRIPTION"), []byte(os.Getenv("ELEMENT_CONTENT")))
+	default:
+		fmt.Printf("unknown command: %s\n", os.Args[1])
+		os.Exit(1)
 	}
 }
