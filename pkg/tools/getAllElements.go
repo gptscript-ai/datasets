@@ -3,6 +3,7 @@ package tools
 import (
 	"fmt"
 	"os"
+	"sort"
 
 	"github.com/gptscript-ai/datasets/pkg/dataset"
 )
@@ -21,6 +22,9 @@ func GetAllElements(workspace, datasetID string) {
 	}
 
 	elements := d.ListElements()
+	sort.Slice(elements, func(i, j int) bool {
+		return elements[i].Name < elements[j].Name
+	})
 	for _, e := range elements {
 		eBytes, _, err := d.GetElement(e.Name)
 		if err != nil {
