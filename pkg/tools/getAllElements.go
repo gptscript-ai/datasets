@@ -1,6 +1,7 @@
 package tools
 
 import (
+	"encoding/json"
 	"fmt"
 	"os"
 	"sort"
@@ -25,6 +26,8 @@ func GetAllElements(workspace, datasetID string) {
 	sort.Slice(elements, func(i, j int) bool {
 		return elements[i].Name < elements[j].Name
 	})
+
+	var elems []elem
 	for _, e := range elements {
 		eBytes, _, err := d.GetElement(e.Name)
 		if err != nil {
@@ -32,6 +35,18 @@ func GetAllElements(workspace, datasetID string) {
 			os.Exit(1)
 		}
 
-		fmt.Printf("%s: %s\n", e.Name, string(eBytes))
+		elems = append(elems, elem{
+			Contents:    string(eBytes),
+			Name:        e.Name,
+			Description: e.Description,
+		})
 	}
+
+	elemsJSON, err := json.Marshal(elems)
+	if err != nil {
+		fmt.Printf("failed to marshal elements: %v\n", err)
+		os.Exit(1)
+	}
+
+	fmt.Println(string(elemsJSON))
 }
