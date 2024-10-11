@@ -35,3 +35,10 @@ Param: elementDescription: an optional description of the new element
 Param: elementContent: the data to store in the element
 
 #!${GPTSCRIPT_TOOL_DIR}/bin/gptscript-go-tool addElement
+
+---
+Name: Get All Elements
+Description: Gets the contents of all elements in a dataset
+Param: datasetID: the ID of the dataset
+
+#!${GPTSCRIPT_TOOL_DIR}/bin/gptscript-go-tool getAllElements
