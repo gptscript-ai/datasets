@@ -1,11 +1,11 @@
 Name: Datasets Context
 Type: context
-Share Tools: List Elements from ../tool.gpt, Get Element from ../tool.gpt
+Share Tools: List Elements from ../tool.gpt, Get Element from ../tool.gpt, Get All Elements from ../tool.gpt
 
 #!sys.echo
 
 ## Dataset instructions
 
-Some tools might return a dataset ID. To get the data inside of this dataset, use the List Elements and Get Element tools.
+Some tools might return a dataset ID. To get the data inside of this dataset, use the List Elements, Get Element, and Get All Elements tools.
 
 ## End of dataset instructions
