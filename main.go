@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"os"
@@ -30,38 +31,38 @@ env vars: GPTSCRIPT_WORKSPACE_DIR`)
 
 	switch os.Args[1] {
 	case "listDatasets":
-		tools.ListDatasets(workspace)
+		tools.ListDatasets()
 	case "listElements":
-		tools.ListElements(workspace, os.Getenv("DATASETID"))
+		tools.ListElements(os.Getenv("DATASETID"))
 	case "getElement":
-		tools.GetElement(workspace, os.Getenv("DATASETID"), os.Getenv("ELEMENT"))
+		tools.GetElement(os.Getenv("DATASETID"), os.Getenv("ELEMENT"))
 	case "createDataset":
-		tools.CreateDataset(workspace, os.Getenv("DATASETNAME"), os.Getenv("DATASETDESCRIPTION"))
+		tools.CreateDataset(os.Getenv("DATASETNAME"), os.Getenv("DATASETDESCRIPTION"))
 	case "addElement":
-		tools.AddElement(workspace, os.Getenv("DATASETID"), os.Getenv("ELEMENTNAME"), os.Getenv("ELEMENTDESCRIPTION"), []byte(os.Getenv("ELEMENTCONTENT")))
+		tools.AddElement(os.Getenv("DATASETID"), os.Getenv("ELEMENTNAME"), os.Getenv("ELEMENTDESCRIPTION"), []byte(os.Getenv("ELEMENTCONTENT")))
 	case "addElements":
 		var elements []elementInput
 		if err := json.Unmarshal([]byte(os.Getenv("ELEMENTS")), &elements); err != nil {
 			fmt.Printf("failed to unmarshal elements: %v\n", err)
 			os.Exit(1)
 		}
-		addElements(workspace, os.Getenv("DATASETID"), elements)
+		addElements(os.Getenv("DATASETID"), elements)
 	case "getAllElements":
-		tools.GetAllElements(workspace, os.Getenv("DATASETID"))
+		tools.GetAllElements(os.Getenv("DATASETID"))
 	default:
 		fmt.Printf("unknown command: %s\n", os.Args[1])
 		os.Exit(1)
 	}
 }
 
-func addElements(workspace, datasetID string, elements []elementInput) {
-	m, err := dataset.NewManager(workspace)
+func addElements(datasetID string, elements []elementInput) {
+	m, err := dataset.NewManager()
 	if err != nil {
 		fmt.Printf("failed to create dataset manager: %v\n", err)
 		os.Exit(1)
 	}
 
-	d, err := m.GetDataset(datasetID)
+	d, err := m.GetDataset(context.Background(), datasetID)
 	if err != nil {
 		fmt.Printf("failed to get dataset: %v\n", err)
 		os.Exit(1)
@@ -69,7 +70,7 @@ func addElements(workspace, datasetID string, elements []elementInput) {
 
 	for _, e := range elements {
 		content := []byte(e.Content)
-		_, err := d.AddElement(e.Name, e.Description, content)
+		_, err := d.AddElement(context.Background(), e.Name, e.Description, content)
 		if err != nil {
 			fmt.Printf("failed to create element: %v\n", err)
 			os.Exit(1)
