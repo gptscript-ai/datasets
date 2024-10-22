@@ -106,7 +106,7 @@ func (d *Dataset) save(ctx context.Context) error {
 		return fmt.Errorf("failed to marshal dataset: %w", err)
 	}
 
-	if err := d.m.gptscriptClient.WriteFileInWorkspace(ctx, datasetFilePrefix+d.ID, datasetJSON, gptscript.WriteFileInWorkspaceOptions{
+	if err := d.m.gptscriptClient.WriteFileInWorkspace(ctx, datasetMetaFolder+"/"+d.ID, datasetJSON, gptscript.WriteFileInWorkspaceOptions{
 		WorkspaceID: d.m.workspaceID,
 	}); err != nil {
 		return fmt.Errorf("failed to write dataset file: %w", err)

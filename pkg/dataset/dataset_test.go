@@ -72,4 +72,8 @@ func TestDatasets(t *testing.T) {
 	fourBytes, _, err := dataset.GetElement(ctx, "file@")
 	require.NoError(t, err)
 	require.Equal(t, "This is dataset file 4.\n", string(fourBytes))
+
+	datasets, err := m.ListDatasets(ctx)
+	require.NoError(t, err)
+	require.Len(t, datasets, 1)
 }
