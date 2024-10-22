@@ -1,12 +1,13 @@
 package dataset
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
-	"os"
-	"path/filepath"
+	"strings"
+	"unicode"
 
-	"github.com/gptscript-ai/datasets/pkg/util"
+	"github.com/gptscript-ai/go-gptscript"
 )
 
 type ElementMeta struct {
@@ -26,8 +27,8 @@ type DatasetMeta struct {
 }
 
 type Dataset struct {
+	m           *Manager
 	DatasetMeta `json:",inline"`
-	BaseDir     string             `json:"baseDir,omitempty"`
 	Elements    map[string]Element `json:"elements"`
 }
 
@@ -55,13 +56,15 @@ func (d *Dataset) ListElements() []ElementMeta {
 	return elements
 }
 
-func (d *Dataset) GetElement(name string) ([]byte, Element, error) {
+func (d *Dataset) GetElement(ctx context.Context, name string) ([]byte, Element, error) {
 	e, exists := d.Elements[name]
 	if !exists {
 		return nil, Element{}, fmt.Errorf("element %s not found", name)
 	}
 
-	contents, err := os.ReadFile(d.BaseDir + string(os.PathSeparator) + e.File)
+	contents, err := d.m.gptscriptClient.ReadFileInWorkspace(ctx, e.File, gptscript.ReadFileInWorkspaceOptions{
+		WorkspaceID: d.m.workspaceID,
+	})
 	if err != nil {
 		return nil, Element{}, fmt.Errorf("failed to read element %s: %w", name, err)
 	}
@@ -69,18 +72,19 @@ func (d *Dataset) GetElement(name string) ([]byte, Element, error) {
 	return contents, e, nil
 }
 
-func (d *Dataset) AddElement(name, description string, contents []byte) (Element, error) {
+func (d *Dataset) AddElement(ctx context.Context, name, description string, contents []byte) (Element, error) {
 	if _, exists := d.Elements[name]; exists {
 		return Element{}, fmt.Errorf("element %s already exists", name)
 	}
 
-	fileName, err := util.EnsureUniqueFilename(d.BaseDir, util.ToFileName(name))
+	fileName, err := d.m.EnsureUniqueElementFilename(ctx, d.ID, toFileName(name))
 	if err != nil {
 		return Element{}, fmt.Errorf("failed to generate unique file name: %w", err)
 	}
 
-	loc := filepath.Join(d.BaseDir, fileName)
-	if err := os.WriteFile(loc, contents, 0644); err != nil {
+	if err := d.m.gptscriptClient.WriteFileInWorkspace(ctx, fileName, contents, gptscript.WriteFileInWorkspaceOptions{
+		WorkspaceID: d.m.workspaceID,
+	}); err != nil {
 		return Element{}, fmt.Errorf("failed to write element %s: %w", name, err)
 	}
 
@@ -93,18 +97,29 @@ func (d *Dataset) AddElement(name, description string, contents []byte) (Element
 	}
 
 	d.Elements[name] = e
-	return e, d.save()
+	return e, d.save(ctx)
 }
 
-func (d *Dataset) save() error {
+func (d *Dataset) save(ctx context.Context) error {
 	datasetJSON, err := json.Marshal(d)
 	if err != nil {
 		return fmt.Errorf("failed to marshal dataset: %w", err)
 	}
 
-	if err := os.WriteFile(d.BaseDir+extension, datasetJSON, 0644); err != nil {
+	if err := d.m.gptscriptClient.WriteFileInWorkspace(ctx, datasetFilePrefix+d.ID, datasetJSON, gptscript.WriteFileInWorkspaceOptions{
+		WorkspaceID: d.m.workspaceID,
+	}); err != nil {
 		return fmt.Errorf("failed to write dataset file: %w", err)
 	}
-
 	return nil
+}
+
+// toFileName converts a name to be alphanumeric plus underscores.
+func toFileName(name string) string {
+	return strings.Map(func(c rune) rune {
+		if !unicode.IsLetter(c) && !unicode.IsDigit(c) {
+			return '_'
+		}
+		return c
+	}, name)
 }
