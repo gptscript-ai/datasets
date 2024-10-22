@@ -1,6 +1,7 @@
 package tools
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"os"
@@ -9,14 +10,14 @@ import (
 	"github.com/gptscript-ai/datasets/pkg/dataset"
 )
 
-func GetAllElements(workspace, datasetID string) {
-	m, err := dataset.NewManager(workspace)
+func GetAllElements(datasetID string) {
+	m, err := dataset.NewManager()
 	if err != nil {
 		fmt.Printf("failed to create dataset manager: %v\n", err)
 		os.Exit(1)
 	}
 
-	d, err := m.GetDataset(datasetID)
+	d, err := m.GetDataset(context.Background(), datasetID)
 	if err != nil {
 		fmt.Printf("failed to get dataset: %v\n", err)
 		os.Exit(1)
@@ -29,7 +30,7 @@ func GetAllElements(workspace, datasetID string) {
 
 	var elems []elem
 	for _, e := range elements {
-		eBytes, _, err := d.GetElement(e.Name)
+		eBytes, _, err := d.GetElement(context.Background(), e.Name)
 		if err != nil {
 			fmt.Printf("failed to get element: %v\n", err)
 			os.Exit(1)
