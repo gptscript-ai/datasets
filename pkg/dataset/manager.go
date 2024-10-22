@@ -5,7 +5,6 @@ import (
 	"crypto/rand"
 	"encoding/json"
 	"fmt"
-	"os"
 	"strings"
 
 	"github.com/gptscript-ai/go-gptscript"
@@ -22,9 +21,7 @@ type Manager struct {
 }
 
 func NewManager() (Manager, error) {
-	g, err := gptscript.NewGPTScript(gptscript.GlobalOptions{
-		URL: os.Getenv("GPTSCRIPT_URL"),
-	})
+	g, err := gptscript.NewGPTScript()
 	if err != nil {
 		return Manager{}, fmt.Errorf("failed to create GPTScript: %w", err)
 	}
