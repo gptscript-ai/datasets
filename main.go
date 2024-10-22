@@ -13,7 +13,7 @@ import (
 type elementInput struct {
 	Name        string `json:"name"`
 	Description string `json:"description"`
-	Content     string `json:"content"`
+	Contents    string `json:"contents"`
 }
 
 func main() {
@@ -69,7 +69,7 @@ func addElements(datasetID string, elements []elementInput) {
 	}
 
 	for _, e := range elements {
-		content := []byte(e.Content)
+		content := []byte(e.Contents)
 		_, err := d.AddElement(context.Background(), e.Name, e.Description, content)
 		if err != nil {
 			fmt.Printf("failed to create element: %v\n", err)

@@ -40,7 +40,7 @@ Param: elementContent: the data to store in the element
 Name: Add Elements
 Description: Adds multiple elements to an existing dataset
 Param: datasetID: the ID of the dataset
-Param: elements: a JSON array of elements to add, like [{"name":"one","description":"element one","content":"data one"}]
+Param: elements: a JSON array of elements to add, like [{"name":"one","description":"element one","contents":"data one"}]
 
 #!${GPTSCRIPT_TOOL_DIR}/bin/gptscript-go-tool addElements
 
