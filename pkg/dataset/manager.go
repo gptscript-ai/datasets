@@ -4,8 +4,8 @@ import (
 	"context"
 	"crypto/rand"
 	"encoding/json"
+	"errors"
 	"fmt"
-	"strings"
 
 	"github.com/gptscript-ai/go-gptscript"
 )
@@ -95,7 +95,7 @@ func (m *Manager) GetDataset(ctx context.Context, id string) (Dataset, error) {
 		WorkspaceID: m.workspaceID,
 	})
 	if err != nil {
-		if strings.Contains(strings.ToLower(err.Error()), "not found") {
+		if isNotFoundInWorkspaceError(err) {
 			return Dataset{}, fmt.Errorf("dataset %s not found", id)
 		}
 		return Dataset{}, fmt.Errorf("failed to read dataset file: %w", err)
@@ -119,10 +119,15 @@ func (m *Manager) EnsureUniqueElementFilename(ctx context.Context, datasetID, na
 		}); err == nil {
 			counter++
 			uniqueName = fmt.Sprintf("%s_%d", name, counter)
-		} else if !strings.Contains(strings.ToLower(err.Error()), "not found") {
+		} else if isNotFoundInWorkspaceError(err) {
 			return "", fmt.Errorf("failed to check if file exists: %w", err)
 		} else {
 			return datasetFolder + "/" + datasetID + "/" + uniqueName, nil
 		}
 	}
+}
+
+func isNotFoundInWorkspaceError(err error) bool {
+	var notFoundErr *gptscript.NotFoundInWorkspaceError
+	return errors.As(err, &notFoundErr)
 }
