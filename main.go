@@ -1,10 +1,15 @@
 package main
 
 import (
+	"bytes"
+	"compress/gzip"
 	"context"
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"io"
 	"os"
+	"strings"
 
 	"github.com/gptscript-ai/datasets/pkg/dataset"
 	"github.com/gptscript-ai/datasets/pkg/tools"
@@ -35,18 +40,57 @@ env vars: GPTSCRIPT_WORKSPACE_DIR`)
 	case "addElement":
 		tools.AddElement(os.Getenv("DATASETID"), os.Getenv("ELEMENTNAME"), os.Getenv("ELEMENTDESCRIPTION"), []byte(os.Getenv("ELEMENTCONTENT")))
 	case "addElements":
-		var elements []elementInput
-		if err := json.Unmarshal([]byte(os.Getenv("ELEMENTS")), &elements); err != nil {
+		var err error
+		elements := os.Getenv("ELEMENTS")
+		if strings.Contains(elements, "{\"_gz\":") {
+			elements, err = decompressElements(elements)
+			if err != nil {
+				fmt.Printf("failed to decompress elements: %v\n", err)
+				os.Exit(1)
+			}
+		}
+
+		var elementInputs []elementInput
+		if err := json.Unmarshal([]byte(elements), &elementInputs); err != nil {
 			fmt.Printf("failed to unmarshal elements: %v\n", err)
 			os.Exit(1)
 		}
-		addElements(os.Getenv("DATASETID"), elements)
+
+		addElements(os.Getenv("DATASETID"), elementInputs)
 	case "getAllElements":
 		tools.GetAllElements(os.Getenv("DATASETID"))
 	default:
 		fmt.Printf("unknown command: %s\n", os.Args[1])
 		os.Exit(1)
 	}
+}
+
+func decompressElements(elements string) (string, error) {
+	var gz struct {
+		Content string `json:"_gz"`
+	}
+	if err := json.Unmarshal([]byte(elements), &gz); err != nil {
+		return elements, nil
+	}
+
+	// Base64 decode and gunzip the content
+	decoded, err := base64.StdEncoding.DecodeString(gz.Content)
+	if err != nil {
+		return "", err
+	}
+
+	// unzip it with gzip
+	reader, err := gzip.NewReader(bytes.NewReader(decoded))
+	if err != nil {
+		return "", err
+	}
+
+	result, err := io.ReadAll(reader)
+	if err != nil {
+		return "", err
+	}
+
+	return string(result), nil
 }
 
 func addElements(datasetID string, elements []elementInput) {
