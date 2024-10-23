@@ -23,12 +23,6 @@ subcommands: listDatasets, listElements, getElement, createDataset, addElement
 env vars: GPTSCRIPT_WORKSPACE_DIR`)
 	}
 
-	workspace := os.Getenv("GPTSCRIPT_WORKSPACE_DIR")
-	if workspace == "" {
-		fmt.Println("missing GPTSCRIPT_WORKSPACE_DIR")
-		os.Exit(1)
-	}
-
 	switch os.Args[1] {
 	case "listDatasets":
 		tools.ListDatasets()
