@@ -1,17 +1,14 @@
 package main
 
 import (
-	"bytes"
-	"compress/gzip"
 	"context"
-	"encoding/base64"
 	"encoding/json"
 	"fmt"
-	"io"
 	"os"
 
 	"github.com/gptscript-ai/datasets/pkg/dataset"
 	"github.com/gptscript-ai/datasets/pkg/tools"
+	"github.com/gptscript-ai/go-gptscript"
 )
 
 type elementInput struct {
@@ -39,14 +36,8 @@ env vars: GPTSCRIPT_WORKSPACE_DIR`)
 	case "addElement":
 		tools.AddElement(os.Getenv("DATASETID"), os.Getenv("ELEMENTNAME"), os.Getenv("ELEMENTDESCRIPTION"), []byte(os.Getenv("ELEMENTCONTENT")))
 	case "addElements":
-		elements, err := handleGzip(os.Getenv("ELEMENTS"))
-		if err != nil {
-			fmt.Printf("failed to decompress elements: %v\n", err)
-			os.Exit(1)
-		}
-
 		var elementInputs []elementInput
-		if err := json.Unmarshal([]byte(elements), &elementInputs); err != nil {
+		if err := json.Unmarshal([]byte(gptscript.GetEnv("ELEMENTS", "")), &elementInputs); err != nil {
 			fmt.Printf("failed to unmarshal elements: %v\n", err)
 			os.Exit(1)
 		}
@@ -58,33 +49,6 @@ env vars: GPTSCRIPT_WORKSPACE_DIR`)
 		fmt.Printf("unknown command: %s\n", os.Args[1])
 		os.Exit(1)
 	}
-}
-
-func handleGzip(elements string) (string, error) {
-	var gz struct {
-		Content string `json:"_gz"`
-	}
-	if err := json.Unmarshal([]byte(elements), &gz); err != nil {
-		// If it didn't unmarshal, then it's not gzipped
-		return elements, nil
-	}
-
-	decoded, err := base64.StdEncoding.DecodeString(gz.Content)
-	if err != nil {
-		return "", err
-	}
-
-	reader, err := gzip.NewReader(bytes.NewReader(decoded))
-	if err != nil {
-		return "", err
-	}
-
-	result, err := io.ReadAll(reader)
-	if err != nil {
-		return "", err
-	}
-
-	return string(result), nil
 }
 
 func addElements(datasetID string, elements []elementInput) {
