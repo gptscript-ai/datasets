@@ -8,6 +8,7 @@ import (
 
 	"github.com/gptscript-ai/datasets/pkg/dataset"
 	"github.com/gptscript-ai/datasets/pkg/tools"
+	"github.com/gptscript-ai/go-gptscript"
 )
 
 type elementInput struct {
@@ -35,12 +36,13 @@ env vars: GPTSCRIPT_WORKSPACE_DIR`)
 	case "addElement":
 		tools.AddElement(os.Getenv("DATASETID"), os.Getenv("ELEMENTNAME"), os.Getenv("ELEMENTDESCRIPTION"), []byte(os.Getenv("ELEMENTCONTENT")))
 	case "addElements":
-		var elements []elementInput
-		if err := json.Unmarshal([]byte(os.Getenv("ELEMENTS")), &elements); err != nil {
+		var elementInputs []elementInput
+		if err := json.Unmarshal([]byte(gptscript.GetEnv("ELEMENTS", "")), &elementInputs); err != nil {
 			fmt.Printf("failed to unmarshal elements: %v\n", err)
 			os.Exit(1)
 		}
-		addElements(os.Getenv("DATASETID"), elements)
+
+		addElements(os.Getenv("DATASETID"), elementInputs)
 	case "getAllElements":
 		tools.GetAllElements(os.Getenv("DATASETID"))
 	default:
