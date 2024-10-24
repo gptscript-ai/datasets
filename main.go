@@ -69,13 +69,11 @@ func handleGzip(elements string) (string, error) {
 		return elements, nil
 	}
 
-	// Base64 decode and gunzip the content
 	decoded, err := base64.StdEncoding.DecodeString(gz.Content)
 	if err != nil {
 		return "", err
 	}
 
-	// unzip it with gzip
 	reader, err := gzip.NewReader(bytes.NewReader(decoded))
 	if err != nil {
 		return "", err
