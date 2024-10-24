@@ -42,7 +42,7 @@ env vars: GPTSCRIPT_WORKSPACE_DIR`)
 	case "addElements":
 		var err error
 		elements := os.Getenv("ELEMENTS")
-		if strings.Contains(elements, "{\"_gz\":") {
+		if strings.Contains(elements, `{"_gz":`) {
 			elements, err = decompressElements(elements)
 			if err != nil {
 				fmt.Printf("failed to decompress elements: %v\n", err)
