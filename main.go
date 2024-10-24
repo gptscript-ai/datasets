@@ -9,7 +9,6 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"strings"
 
 	"github.com/gptscript-ai/datasets/pkg/dataset"
 	"github.com/gptscript-ai/datasets/pkg/tools"
@@ -40,14 +39,10 @@ env vars: GPTSCRIPT_WORKSPACE_DIR`)
 	case "addElement":
 		tools.AddElement(os.Getenv("DATASETID"), os.Getenv("ELEMENTNAME"), os.Getenv("ELEMENTDESCRIPTION"), []byte(os.Getenv("ELEMENTCONTENT")))
 	case "addElements":
-		var err error
-		elements := os.Getenv("ELEMENTS")
-		if strings.Contains(elements, `{"_gz":`) {
-			elements, err = decompressElements(elements)
-			if err != nil {
-				fmt.Printf("failed to decompress elements: %v\n", err)
-				os.Exit(1)
-			}
+		elements, err := handleGzip(os.Getenv("ELEMENTS"))
+		if err != nil {
+			fmt.Printf("failed to decompress elements: %v\n", err)
+			os.Exit(1)
 		}
 
 		var elementInputs []elementInput
@@ -65,11 +60,12 @@ env vars: GPTSCRIPT_WORKSPACE_DIR`)
 	}
 }
 
-func decompressElements(elements string) (string, error) {
+func handleGzip(elements string) (string, error) {
 	var gz struct {
 		Content string `json:"_gz"`
 	}
 	if err := json.Unmarshal([]byte(elements), &gz); err != nil {
+		// If it didn't unmarshal, then it's not gzipped
 		return elements, nil
 	}
 
