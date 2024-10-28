@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
-	"sort"
 
 	"github.com/gptscript-ai/datasets/pkg/dataset"
 )
@@ -24,9 +23,9 @@ func GetAllElements(datasetID string) {
 	}
 
 	elements := d.ListElements()
-	sort.Slice(elements, func(i, j int) bool {
-		return elements[i].Name < elements[j].Name
-	})
+	//sort.Slice(elements, func(i, j int) bool {
+	//	return elements[i].Name < elements[j].Name
+	//})
 
 	var elems []elem
 	for _, e := range elements {
