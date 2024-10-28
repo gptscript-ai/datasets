@@ -57,21 +57,32 @@ func TestDatasets(t *testing.T) {
 	metas := dataset.ListElements()
 	require.Len(t, metas, 4)
 
-	oneBytes, _, err := dataset.GetElement(ctx, "file1")
+	oneBytes, oneElement, err := dataset.GetElement(ctx, "file1")
 	require.NoError(t, err)
 	require.Equal(t, "This is dataset file 1.\n", string(oneBytes))
+	require.Equal(t, 0, oneElement.Index)
 
-	twoBytes, _, err := dataset.GetElement(ctx, "file2")
+	twoBytes, twoElement, err := dataset.GetElement(ctx, "file2")
 	require.NoError(t, err)
 	require.Equal(t, "This is dataset file 2.\n", string(twoBytes))
+	require.Equal(t, 1, twoElement.Index)
 
-	threeBytes, _, err := dataset.GetElement(ctx, "file!")
+	threeBytes, threeElement, err := dataset.GetElement(ctx, "file!")
 	require.NoError(t, err)
 	require.Equal(t, "This is dataset file 3.\n", string(threeBytes))
+	require.Equal(t, 2, threeElement.Index)
 
-	fourBytes, _, err := dataset.GetElement(ctx, "file@")
+	fourBytes, fourElement, err := dataset.GetElement(ctx, "file@")
 	require.NoError(t, err)
 	require.Equal(t, "This is dataset file 4.\n", string(fourBytes))
+	require.Equal(t, 3, fourElement.Index)
+
+	// Test to make sure the order was maintained
+	elementMetas := dataset.ListElements()
+	require.Equal(t, "file1", elementMetas[0].Name)
+	require.Equal(t, "file2", elementMetas[1].Name)
+	require.Equal(t, "file!", elementMetas[2].Name)
+	require.Equal(t, "file@", elementMetas[3].Name)
 
 	datasets, err := m.ListDatasets(ctx)
 	require.NoError(t, err)
