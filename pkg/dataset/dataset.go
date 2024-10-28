@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"sort"
 	"strings"
 	"unicode"
 
@@ -18,6 +19,7 @@ type ElementMeta struct {
 type Element struct {
 	ElementMeta `json:",inline"`
 	File        string `json:"file"`
+	Index       int    `json:"index"`
 }
 
 type DatasetMeta struct {
@@ -49,11 +51,19 @@ func (d *Dataset) GetLength() int {
 }
 
 func (d *Dataset) ListElements() []ElementMeta {
-	var elements []ElementMeta
+	var elements []Element
 	for _, element := range d.Elements {
-		elements = append(elements, element.ElementMeta)
+		elements = append(elements, element)
 	}
-	return elements
+	sort.Slice(elements, func(i, j int) bool {
+		return elements[i].Index < elements[j].Index
+	})
+
+	var elementMetas []ElementMeta
+	for _, element := range elements {
+		elementMetas = append(elementMetas, element.ElementMeta)
+	}
+	return elementMetas
 }
 
 func (d *Dataset) GetElement(ctx context.Context, name string) ([]byte, Element, error) {
@@ -93,7 +103,8 @@ func (d *Dataset) AddElement(ctx context.Context, name, description string, cont
 			Name:        name,
 			Description: description,
 		},
-		File: fileName,
+		Index: len(d.Elements),
+		File:  fileName,
 	}
 
 	d.Elements[name] = e
