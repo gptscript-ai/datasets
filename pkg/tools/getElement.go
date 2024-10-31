@@ -2,6 +2,7 @@ package tools
 
 import (
 	"context"
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"os"
@@ -15,7 +16,30 @@ type elem struct {
 	Description string `json:"description,omitempty"`
 }
 
-func GetElement(datasetID, elementName string) {
+func GetElementLLM(datasetID, elementName string) {
+	element := getElement(datasetID, elementName)
+	// Attempt to base64 decode the contents.
+	rawContents, err := base64.StdEncoding.DecodeString(element.Contents)
+	if err != nil {
+		// If it's not base64, just use the contents.
+		rawContents = []byte(element.Contents)
+	}
+
+	fmt.Printf(`{"name": %q, "description: %q, "contents": %q}`, element.Name, element.Description, string(rawContents))
+}
+
+func GetElementSDK(datasetID, elementName string) {
+	element := getElement(datasetID, elementName)
+	elementJSON, err := json.Marshal(element)
+	if err != nil {
+		fmt.Printf("failed to marshal element: %v\n", err)
+		os.Exit(1)
+	}
+
+	fmt.Print(string(elementJSON))
+}
+
+func getElement(datasetID, elementName string) elem {
 	m, err := dataset.NewManager()
 	if err != nil {
 		fmt.Printf("failed to create dataset manager: %v\n", err)
@@ -34,17 +58,9 @@ func GetElement(datasetID, elementName string) {
 		os.Exit(1)
 	}
 
-	element := elem{
+	return elem{
 		Contents:    string(elementContents),
 		Name:        e.Name,
 		Description: e.Description,
 	}
-
-	elementJSON, err := json.Marshal(element)
-	if err != nil {
-		fmt.Printf("failed to marshal element: %v\n", err)
-		os.Exit(1)
-	}
-
-	fmt.Print(string(elementJSON))
 }

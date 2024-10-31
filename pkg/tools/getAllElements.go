@@ -2,14 +2,42 @@ package tools
 
 import (
 	"context"
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/gptscript-ai/datasets/pkg/dataset"
 )
 
-func GetAllElements(datasetID string) {
+func GetAllElementsLLM(datasetID string) {
+	elems := getAllElements(datasetID)
+
+	var elemStrings []string
+	for _, e := range elems {
+		rawContents, err := base64.StdEncoding.DecodeString(e.Contents)
+		if err != nil {
+			rawContents = []byte(e.Contents)
+		}
+		elemStrings = append(elemStrings, fmt.Sprintf(`{"name": %q, "description: %q, "contents": %q}`, e.Name, e.Description, string(rawContents)))
+	}
+
+	fmt.Printf("[%s]", strings.Join(elemStrings, ","))
+}
+
+func GetAllElementsSDK(datasetID string) {
+	elems := getAllElements(datasetID)
+	elemsJSON, err := json.Marshal(elems)
+	if err != nil {
+		fmt.Printf("failed to marshal elements: %v\n", err)
+		os.Exit(1)
+	}
+
+	fmt.Println(string(elemsJSON))
+}
+
+func getAllElements(datasetID string) []elem {
 	m, err := dataset.NewManager()
 	if err != nil {
 		fmt.Printf("failed to create dataset manager: %v\n", err)
@@ -38,11 +66,5 @@ func GetAllElements(datasetID string) {
 		})
 	}
 
-	elemsJSON, err := json.Marshal(elems)
-	if err != nil {
-		fmt.Printf("failed to marshal elements: %v\n", err)
-		os.Exit(1)
-	}
-
-	fmt.Println(string(elemsJSON))
+	return elems
 }
