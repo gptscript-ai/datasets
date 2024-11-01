@@ -30,7 +30,13 @@ env vars: GPTSCRIPT_WORKSPACE_DIR`)
 	case "listElements":
 		tools.ListElements(os.Getenv("DATASETID"))
 	case "getElement":
-		tools.GetElement(os.Getenv("DATASETID"), os.Getenv("ELEMENT"))
+		tools.GetElementLLM(os.Getenv("DATASETID"), os.Getenv("ELEMENT"))
+	case "getAllElements":
+		tools.GetAllElementsLLM(os.Getenv("DATASETID"))
+	case "getElementSDK":
+		tools.GetElementSDK(os.Getenv("DATASETID"), os.Getenv("ELEMENT"))
+	case "getAllElementsSDK":
+		tools.GetAllElementsSDK(os.Getenv("DATASETID"))
 	case "createDataset":
 		tools.CreateDataset(os.Getenv("DATASETNAME"), os.Getenv("DATASETDESCRIPTION"))
 	case "addElement":
@@ -43,8 +49,6 @@ env vars: GPTSCRIPT_WORKSPACE_DIR`)
 		}
 
 		addElements(os.Getenv("DATASETID"), elementInputs)
-	case "getAllElements":
-		tools.GetAllElements(os.Getenv("DATASETID"))
 	default:
 		fmt.Printf("unknown command: %s\n", os.Args[1])
 		os.Exit(1)

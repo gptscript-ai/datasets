@@ -11,12 +11,34 @@ Param: datasetID: the ID of the dataset
 #!${GPTSCRIPT_TOOL_DIR}/bin/gptscript-go-tool listElements
 
 ---
-Name: Get Element
-Description: Gets a particular element's metadata and contents
+Name: Get Element SDK
+Description: Gets a particular element's metadata and contents. For SDK use only.
 Param: datasetID: the ID of the dataset
 Param: element: the name of the element
 
 #!${GPTSCRIPT_TOOL_DIR}/bin/gptscript-go-tool getElement
+
+---
+Name: Get All Elements SDK
+Description: Gets the contents of all elements in a dataset. For SDK use only.
+Param: datasetID: the ID of the dataset
+
+#!${GPTSCRIPT_TOOL_DIR}/bin/gptscript-go-tool getAllElements
+
+---
+Name: Get Element
+Description: Gets a particular element's metadata and contents.
+Param: datasetID: the ID of the dataset
+Param: element: the name of the element
+
+#!${GPTSCRIPT_TOOL_DIR}/bin/gptscript-go-tool getElement
+
+---
+Name: Get All Elements
+Description: Gets the contents of all elements in a dataset.
+Param: datasetID: the ID of the dataset
+
+#!${GPTSCRIPT_TOOL_DIR}/bin/gptscript-go-tool getAllElements
 
 ---
 Name: Create Dataset
@@ -44,9 +66,4 @@ Param: elements: a JSON array of elements to add, like [{"name":"one","descripti
 
 #!${GPTSCRIPT_TOOL_DIR}/bin/gptscript-go-tool addElements
 
----
-Name: Get All Elements
-Description: Gets the contents of all elements in a dataset
-Param: datasetID: the ID of the dataset
 
-#!${GPTSCRIPT_TOOL_DIR}/bin/gptscript-go-tool getAllElements
