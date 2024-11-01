@@ -20,7 +20,7 @@ func GetAllElementsLLM(datasetID string) {
 		if err != nil {
 			rawContents = []byte(e.Contents)
 		}
-		elemStrings = append(elemStrings, fmt.Sprintf(`{"name": %q, "description: %q, "contents": %q}`, e.Name, e.Description, string(rawContents)))
+		elemStrings = append(elemStrings, fmt.Sprintf(`{"name": %q, "description": %q, "contents": %q}`, e.Name, e.Description, string(rawContents)))
 	}
 
 	fmt.Printf("[%s]", strings.Join(elemStrings, ","))

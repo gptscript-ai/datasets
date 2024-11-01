@@ -25,7 +25,7 @@ func GetElementLLM(datasetID, elementName string) {
 		rawContents = []byte(element.Contents)
 	}
 
-	fmt.Printf(`{"name": %q, "description: %q, "contents": %q}`, element.Name, element.Description, string(rawContents))
+	fmt.Printf(`{"name": %q, "description": %q, "contents": %q}`, element.Name, element.Description, string(rawContents))
 }
 
 func GetElementSDK(datasetID, elementName string) {
