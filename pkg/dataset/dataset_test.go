@@ -24,8 +24,6 @@ func TestDatasets(t *testing.T) {
 
 	dataset, err := m.NewDataset(ctx, "test dataset", "our lovely test dataset")
 	require.NoError(t, err)
-	require.Equal(t, "test dataset", dataset.GetName())
-	require.Equal(t, "our lovely test dataset", dataset.GetDescription())
 	require.Equal(t, 0, dataset.GetLength())
 
 	// Let's add a couple elements.
@@ -51,8 +49,6 @@ func TestDatasets(t *testing.T) {
 	// Let's read it back.
 	dataset, err = m.GetDataset(ctx, dataset.GetID())
 	require.NoError(t, err)
-	require.Equal(t, "test dataset", dataset.GetName())
-	require.Equal(t, "our lovely test dataset", dataset.GetDescription())
 
 	metas := dataset.ListElements()
 	require.Len(t, metas, 4)

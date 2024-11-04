@@ -6,6 +6,7 @@ Share Tools: List Elements from ../tool.gpt, Get Element from ../tool.gpt, Get A
 
 ## Dataset instructions
 
-Some tools might return a dataset ID. To get the data inside of this dataset, use the List Elements, Get Element, and Get All Elements tools.
+Some tools might return a dataset ID. Dataset IDs always start with "gds://".
+To get the data inside of this dataset, use the List Elements, Get Element, and Get All Elements tools.
 
 ## End of dataset instructions

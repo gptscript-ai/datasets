@@ -1,69 +1,49 @@
 Name: List Datasets
 Description: Lists all available datasets
+Tools: service
+Param: workspaceID: the ID of the workspace to use
 
-#!${GPTSCRIPT_TOOL_DIR}/bin/gptscript-go-tool listDatasets
+#!http://service.daemon.gptscript.local/listDatasets
 
 ---
 Name: List Elements
 Description: Lists metadata for all elements in a dataset
+Tools: service
+Param: workspaceID: the ID of the workspace to use
 Param: datasetID: the ID of the dataset
 
-#!${GPTSCRIPT_TOOL_DIR}/bin/gptscript-go-tool listElements
-
----
-Name: Get Element SDK
-Description: Gets a particular element's metadata and contents. For SDK use only.
-Param: datasetID: the ID of the dataset
-Param: element: the name of the element
-
-#!${GPTSCRIPT_TOOL_DIR}/bin/gptscript-go-tool getElementSDK
-
----
-Name: Get All Elements SDK
-Description: Gets the contents of all elements in a dataset. For SDK use only.
-Param: datasetID: the ID of the dataset
-
-#!${GPTSCRIPT_TOOL_DIR}/bin/gptscript-go-tool getAllElementsSDK
+#!http://service.daemon.gptscript.local/listElements
 
 ---
 Name: Get Element
 Description: Gets a particular element's metadata and contents.
+Tools: service
+Param: workspaceID: the ID of the workspace to use
 Param: datasetID: the ID of the dataset
-Param: element: the name of the element
+Param: name: the name of the element
 
-#!${GPTSCRIPT_TOOL_DIR}/bin/gptscript-go-tool getElement
+#!http://service.daemon.gptscript.local/getElement
 
 ---
 Name: Get All Elements
 Description: Gets the contents of all elements in a dataset.
+Tools: service
+Param: workspaceID: the ID of the workspace to use
 Param: datasetID: the ID of the dataset
 
-#!${GPTSCRIPT_TOOL_DIR}/bin/gptscript-go-tool getAllElements
-
----
-Name: Create Dataset
-Description: Creates a new, empty dataset
-Param: datasetName: the name of the new dataset
-Param: datasetDescription: a description of the new dataset
-
-#!${GPTSCRIPT_TOOL_DIR}/bin/gptscript-go-tool createDataset
-
----
-Name: Add Element
-Description: Adds a new element to an existing dataset
-Param: datasetID: the ID of the dataset
-Param: elementName: the name of the new element
-Param: elementDescription: an optional description of the new element
-Param: elementContent: the data to store in the element
-
-#!${GPTSCRIPT_TOOL_DIR}/bin/gptscript-go-tool addElement
+#!http://service.daemon.gptscript.local/getAllElements
 
 ---
 Name: Add Elements
 Description: Adds multiple elements to an existing dataset
-Param: datasetID: the ID of the dataset
-Param: elements: a JSON array of elements to add, like [{"name":"one","description":"element one","contents":"data one"}]
+Tools: service
+Param: workspaceID: the ID of the workspace to use.
+Param: datasetID: (Optional) the ID of the dataset. If unset, a new one will be created.
+Param: elements: a JSON array of elements to add.
 
-#!${GPTSCRIPT_TOOL_DIR}/bin/gptscript-go-tool addElements
+#!http://service.daemon.gptscript.local/addElements
 
+---
+Name: service
 
+#!sys.daemon #!${GPTSCRIPT_TOOL_DIR}/bin/gptscript-go-tool
