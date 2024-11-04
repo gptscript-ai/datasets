@@ -93,6 +93,7 @@ func (d *Dataset) AddElement(e Element) error {
 		return fmt.Errorf("element %s already exists", e.Name)
 	}
 
+	e.Index = len(d.Elements)
 	d.Elements[e.Name] = e
 	return nil
 }
