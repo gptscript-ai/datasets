@@ -25,6 +25,7 @@ func main() {
 	mux.HandleFunc("/listElements", tools.ListElements)
 	mux.HandleFunc("/getElement", tools.GetElement)
 	mux.HandleFunc("/listDatasets", tools.ListDatasets)
+	mux.HandleFunc("/", health)
 
 	srv := &http.Server{
 		Addr:    ":" + os.Getenv("PORT"),
@@ -47,4 +48,8 @@ func main() {
 	if err := srv.Shutdown(ctx); err != nil {
 		fmt.Printf("server forced to shut down: %v\n", err)
 	}
+}
+
+func health(w http.ResponseWriter, _ *http.Request) {
+	w.Write([]byte("ok"))
 }
