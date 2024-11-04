@@ -23,8 +23,6 @@ func AddElements(w http.ResponseWriter, r *http.Request) {
 
 	if req.WorkspaceID == "" {
 		http.Error(w, "workspaceID is required", http.StatusBadRequest)
-	} else if req.DatasetID == "" {
-		http.Error(w, "datasetID is required", http.StatusBadRequest)
 	} else if len(req.Elements) == 0 {
 		http.Error(w, "elements is required", http.StatusBadRequest)
 		return
