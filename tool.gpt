@@ -46,4 +46,4 @@ Param: elements: a JSON array of elements to add.
 ---
 Name: service
 
-#!sys.daemon #!${GPTSCRIPT_TOOL_DIR}/bin/gptscript-go-tool
+#!sys.daemon #!${GPTSCRIPT_TOOL_DIR}/bin/gptscript-go-tool serve
