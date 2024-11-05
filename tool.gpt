@@ -1,7 +1,6 @@
 Name: List Datasets
 Description: Lists all available datasets
 Tools: service
-Param: workspaceID: the ID of the workspace to use
 
 #!http://service.daemon.gptscript.local/listDatasets
 
@@ -9,7 +8,6 @@ Param: workspaceID: the ID of the workspace to use
 Name: List Elements
 Description: Lists metadata for all elements in a dataset
 Tools: service
-Param: workspaceID: the ID of the workspace to use
 Param: datasetID: the ID of the dataset
 
 #!http://service.daemon.gptscript.local/listElements
@@ -18,7 +16,6 @@ Param: datasetID: the ID of the dataset
 Name: Get Element
 Description: Gets a particular element's metadata and contents.
 Tools: service
-Param: workspaceID: the ID of the workspace to use
 Param: datasetID: the ID of the dataset
 Param: name: the name of the element
 
@@ -28,7 +25,6 @@ Param: name: the name of the element
 Name: Get All Elements
 Description: Gets the contents of all elements in a dataset.
 Tools: service
-Param: workspaceID: the ID of the workspace to use
 Param: datasetID: the ID of the dataset
 
 #!http://service.daemon.gptscript.local/getAllElements
@@ -37,7 +33,6 @@ Param: datasetID: the ID of the dataset
 Name: Add Elements
 Description: Adds multiple elements to an existing dataset
 Tools: service
-Param: workspaceID: the ID of the workspace to use.
 Param: datasetID: (Optional) the ID of the dataset. If unset, a new one will be created.
 Param: elements: a JSON array of elements to add.
 

@@ -7,25 +7,17 @@ import (
 	"os"
 
 	"github.com/gptscript-ai/datasets/pkg/dataset"
+	"github.com/gptscript-ai/datasets/pkg/util"
 )
 
-type listDatasetsRequest struct {
-	WorkspaceID string `json:"workspaceID"`
-}
-
 func ListDatasets(w http.ResponseWriter, r *http.Request) {
-	var req listDatasetsRequest
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+	workspaceID, err := util.GetWorkspaceID(r)
+	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	if req.WorkspaceID == "" {
-		http.Error(w, "workspaceID is required", http.StatusBadRequest)
-		return
-	}
-
-	m, err := dataset.NewManager(req.WorkspaceID)
+	m, err := dataset.NewManager(workspaceID)
 	if err != nil {
 		fmt.Printf("failed to create dataset manager: %v\n", err)
 		os.Exit(1)

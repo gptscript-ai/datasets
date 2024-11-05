@@ -8,11 +8,11 @@ import (
 	"strings"
 
 	"github.com/gptscript-ai/datasets/pkg/dataset"
+	"github.com/gptscript-ai/datasets/pkg/util"
 )
 
 type listElementsRequest struct {
-	WorkspaceID string `json:"workspaceID"`
-	DatasetID   string `json:"datasetID"`
+	DatasetID string `json:"datasetID"`
 }
 
 func ListElements(w http.ResponseWriter, r *http.Request) {
@@ -22,15 +22,18 @@ func ListElements(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if req.WorkspaceID == "" {
-		http.Error(w, "workspaceID is required", http.StatusBadRequest)
-		return
-	} else if req.DatasetID == "" {
+	if req.DatasetID == "" {
 		http.Error(w, "datasetID is required", http.StatusBadRequest)
 		return
 	}
 
-	m, err := dataset.NewManager(req.WorkspaceID)
+	workspaceID, err := util.GetWorkspaceID(r)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	m, err := dataset.NewManager(workspaceID)
 	if err != nil {
 		fmt.Printf("failed to create dataset manager: %v\n", err)
 		os.Exit(1)

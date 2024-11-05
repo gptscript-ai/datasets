@@ -6,12 +6,12 @@ import (
 	"strings"
 
 	"github.com/gptscript-ai/datasets/pkg/dataset"
+	"github.com/gptscript-ai/datasets/pkg/util"
 )
 
 type addElementsRequest struct {
-	WorkspaceID string            `json:"workspaceID"`
-	DatasetID   string            `json:"datasetID"`
-	Elements    []dataset.Element `json:"elements"`
+	DatasetID string            `json:"datasetID"`
+	Elements  []dataset.Element `json:"elements"`
 }
 
 func AddElements(w http.ResponseWriter, r *http.Request) {
@@ -21,14 +21,18 @@ func AddElements(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if req.WorkspaceID == "" {
-		http.Error(w, "workspaceID is required", http.StatusBadRequest)
-	} else if len(req.Elements) == 0 {
+	if len(req.Elements) == 0 {
 		http.Error(w, "elements is required", http.StatusBadRequest)
 		return
 	}
 
-	m, err := dataset.NewManager(req.WorkspaceID)
+	workspaceID, err := util.GetWorkspaceID(r)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	m, err := dataset.NewManager(workspaceID)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
