@@ -34,6 +34,8 @@ Name: Add Elements
 Description: Adds multiple elements to an existing dataset
 Tools: service
 Param: datasetID: (Optional) the ID of the dataset. If unset, a new one will be created.
+Param: name: (Optional) if creating a new dataset, this is the dataset name.
+Param: description: (Optional) if creating a new dataset, this is the dataset description.
 Param: elements: a JSON array of elements to add.
 
 #!http://service.daemon.gptscript.local/addElements
