@@ -28,8 +28,7 @@ func NewManager(workspaceID string) (Manager, error) {
 	return Manager{gptscriptClient: g, workspaceID: workspaceID}, nil
 }
 
-// ListDatasets returns a slice of dataset IDs.
-func (m *Manager) ListDatasets(ctx context.Context) ([]string, error) {
+func (m *Manager) ListDatasets(ctx context.Context) ([]DatasetMeta, error) {
 	files, err := m.gptscriptClient.ListFilesInWorkspace(ctx, gptscript.ListFilesInWorkspaceOptions{
 		Prefix:      datasetFolder,
 		WorkspaceID: m.workspaceID,
@@ -38,7 +37,7 @@ func (m *Manager) ListDatasets(ctx context.Context) ([]string, error) {
 		return nil, fmt.Errorf("failed to list dataset files: %w", err)
 	}
 
-	var datasets []string
+	var datasets []DatasetMeta
 	for _, file := range files {
 		contents, err := m.gptscriptClient.ReadFileInWorkspace(ctx, file, gptscript.ReadFileInWorkspaceOptions{
 			WorkspaceID: m.workspaceID,
@@ -52,13 +51,13 @@ func (m *Manager) ListDatasets(ctx context.Context) ([]string, error) {
 			return nil, fmt.Errorf("failed to read dataset file %s: %w", file, err)
 		}
 
-		datasets = append(datasets, d.ID)
+		datasets = append(datasets, d.DatasetMeta)
 	}
 
 	return datasets, nil
 }
 
-func (m *Manager) NewDataset(ctx context.Context) (Dataset, error) {
+func (m *Manager) NewDataset(ctx context.Context, name, description string) (Dataset, error) {
 	randBytes := make([]byte, 3)
 	if _, err := rand.Read(randBytes); err != nil {
 		return Dataset{}, fmt.Errorf("failed to generate random bytes: %w", err)
@@ -66,7 +65,11 @@ func (m *Manager) NewDataset(ctx context.Context) (Dataset, error) {
 
 	id := fmt.Sprintf("gds://%x", randBytes)[:11]
 	d := Dataset{
-		ID:       id,
+		DatasetMeta: DatasetMeta{
+			ID:          id,
+			Name:        name,
+			Description: description,
+		},
 		Elements: make(map[string]Element),
 	}
 

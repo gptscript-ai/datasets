@@ -10,8 +10,10 @@ import (
 )
 
 type addElementsRequest struct {
-	DatasetID string            `json:"datasetID"`
-	Elements  []dataset.Element `json:"elements"`
+	DatasetID   string            `json:"datasetID"`
+	Name        string            `json:"name"`
+	Description string            `json:"description"`
+	Elements    []dataset.Element `json:"elements"`
 }
 
 func AddElements(w http.ResponseWriter, r *http.Request) {
@@ -40,7 +42,7 @@ func AddElements(w http.ResponseWriter, r *http.Request) {
 
 	var d dataset.Dataset
 	if req.DatasetID == "" {
-		d, err = m.NewDataset(r.Context())
+		d, err = m.NewDataset(r.Context(), req.Name, req.Description)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return

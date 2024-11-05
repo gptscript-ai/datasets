@@ -28,10 +28,16 @@ type ElementNoIndex struct {
 	BinaryContents []byte `json:"binaryContents"`
 }
 
+type DatasetMeta struct {
+	ID          string `json:"id"`
+	Name        string `json:"name"`
+	Description string `json:"description"`
+}
+
 type Dataset struct {
-	m        *Manager
-	ID       string             `json:"id"`
-	Elements map[string]Element `json:"elements"`
+	m           *Manager
+	DatasetMeta `json:",inline"`
+	Elements    map[string]Element `json:"elements"`
 }
 
 func (d *Dataset) GetID() string {
