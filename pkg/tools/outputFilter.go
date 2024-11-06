@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"os"
 	"regexp"
+	"sort"
 	"strings"
 
 	"github.com/gptscript-ai/datasets/pkg/dataset"
@@ -64,25 +65,45 @@ outerFor:
 			return
 		}
 
-		toWrite := d
-		toWrite.Elements = make(map[string]dataset.Element)
+		output := struct {
+			ID          string            `json:"id,omitempty"`
+			Name        string            `json:"name,omitempty"`
+			Description string            `json:"description,omitempty"`
+			Items       []dataset.Element `json:"items,omitempty"`
+			Length      int               `json:"length,omitempty"`
+			Truncated   bool              `json:"truncated,omitempty"`
+		}{
+			ID:          d.ID,
+			Name:        d.Name,
+			Description: d.Description,
+			Length:      len(d.Elements),
+		}
 
+		var elementList []dataset.Element
 		for _, element := range d.Elements {
+			elementList = append(elementList, element)
+		}
+		sort.Slice(elementList, func(i, j int) bool {
+			return elementList[i].Index < elementList[j].Index
+		})
+
+		for _, element := range elementList {
 			budget -= len(element.Contents)
 			budget -= len(element.BinaryContents)
 			if budget < 0 {
-				toWrite.Truncated = true
-				if err := json.NewEncoder(w).Encode(toWrite); err != nil {
+				output.Truncated = true
+				if err := json.NewEncoder(w).Encode(output); err != nil {
 					http.Error(w, err.Error(), http.StatusInternalServerError)
 					return
 				}
-				data := fmt.Sprintf("\nDataset truncated, %d of %d items not returned\n", len(d.Elements)-len(toWrite.Elements), len(d.Elements))
+				data := fmt.Sprintf("\nDataset %s truncated, %d of %d items not returned\n", id, len(elementList)-len(output.Items), len(elementList))
 				_, _ = w.Write([]byte(data))
 				continue outerFor
 			}
+			output.Items = append(output.Items, element)
 		}
 
-		if err := json.NewEncoder(w).Encode(toWrite); err != nil {
+		if err := json.NewEncoder(w).Encode(output); err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}

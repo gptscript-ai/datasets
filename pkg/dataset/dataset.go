@@ -38,7 +38,6 @@ type Dataset struct {
 	m           *Manager
 	DatasetMeta `json:",inline"`
 	Elements    map[string]Element `json:"elements,omitempty"`
-	Truncated   bool               `json:"truncated,omitempty"`
 }
 
 func (d *Dataset) GetID() string {
