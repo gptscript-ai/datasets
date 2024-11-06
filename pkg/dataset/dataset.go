@@ -5,8 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"sort"
-	"strings"
-	"unicode"
 
 	"github.com/gptscript-ai/go-gptscript"
 )
@@ -17,9 +15,17 @@ type ElementMeta struct {
 }
 
 type Element struct {
-	ElementMeta `json:",inline"`
-	File        string `json:"file"`
-	Index       int    `json:"index"`
+	ElementMeta    `json:",inline"`
+	Index          int    `json:"index"`
+	Contents       string `json:"contents"`
+	BinaryContents []byte `json:"binaryContents"`
+}
+
+// ElementNoIndex is used for returning data to the user, since the user does not care about the index.
+type ElementNoIndex struct {
+	ElementMeta    `json:",inline"`
+	Contents       string `json:"contents"`
+	BinaryContents []byte `json:"binaryContents"`
 }
 
 type DatasetMeta struct {
@@ -36,14 +42,6 @@ type Dataset struct {
 
 func (d *Dataset) GetID() string {
 	return d.ID
-}
-
-func (d *Dataset) GetName() string {
-	return d.Name
-}
-
-func (d *Dataset) GetDescription() string {
-	return d.Description
 }
 
 func (d *Dataset) GetLength() int {
@@ -66,71 +64,56 @@ func (d *Dataset) ListElements() []ElementMeta {
 	return elementMetas
 }
 
-func (d *Dataset) GetElement(ctx context.Context, name string) ([]byte, Element, error) {
+func (d *Dataset) GetAllElements() []ElementNoIndex {
+	var elements []Element
+	for _, element := range d.Elements {
+		elements = append(elements, element)
+	}
+	sort.Slice(elements, func(i, j int) bool {
+		return elements[i].Index < elements[j].Index
+	})
+
+	var noIndex []ElementNoIndex
+	for _, element := range elements {
+		noIndex = append(noIndex, ElementNoIndex{
+			ElementMeta:    element.ElementMeta,
+			Contents:       element.Contents,
+			BinaryContents: element.BinaryContents,
+		})
+	}
+
+	return noIndex
+}
+
+func (d *Dataset) GetElement(name string) (Element, error) {
 	e, exists := d.Elements[name]
 	if !exists {
-		return nil, Element{}, fmt.Errorf("element %s not found", name)
+		return Element{}, fmt.Errorf("element %s not found", name)
 	}
 
-	contents, err := d.m.gptscriptClient.ReadFileInWorkspace(ctx, e.File, gptscript.ReadFileInWorkspaceOptions{
-		WorkspaceID: d.m.workspaceID,
-	})
-	if err != nil {
-		return nil, Element{}, fmt.Errorf("failed to read element %s: %w", name, err)
-	}
-
-	return contents, e, nil
+	return e, nil
 }
 
-func (d *Dataset) AddElement(ctx context.Context, name, description string, contents []byte) (Element, error) {
-	if _, exists := d.Elements[name]; exists {
-		return Element{}, fmt.Errorf("element %s already exists", name)
+func (d *Dataset) AddElement(e Element) error {
+	if _, exists := d.Elements[e.Name]; exists {
+		return fmt.Errorf("element %s already exists", e.Name)
 	}
 
-	fileName, err := d.m.EnsureUniqueElementFilename(ctx, d.ID, toFileName(name))
-	if err != nil {
-		return Element{}, fmt.Errorf("failed to generate unique file name: %w", err)
-	}
-
-	if err := d.m.gptscriptClient.WriteFileInWorkspace(ctx, fileName, contents, gptscript.WriteFileInWorkspaceOptions{
-		WorkspaceID: d.m.workspaceID,
-	}); err != nil {
-		return Element{}, fmt.Errorf("failed to write element %s: %w", name, err)
-	}
-
-	e := Element{
-		ElementMeta: ElementMeta{
-			Name:        name,
-			Description: description,
-		},
-		Index: len(d.Elements),
-		File:  fileName,
-	}
-
-	d.Elements[name] = e
-	return e, d.save(ctx)
+	e.Index = len(d.Elements)
+	d.Elements[e.Name] = e
+	return nil
 }
 
-func (d *Dataset) save(ctx context.Context) error {
+func (d *Dataset) Save(ctx context.Context) error {
 	datasetJSON, err := json.Marshal(d)
 	if err != nil {
 		return fmt.Errorf("failed to marshal dataset: %w", err)
 	}
 
-	if err := d.m.gptscriptClient.WriteFileInWorkspace(ctx, datasetMetaFolder+"/"+d.ID, datasetJSON, gptscript.WriteFileInWorkspaceOptions{
+	if err := d.m.gptscriptClient.WriteFileInWorkspace(ctx, datasetFolder+"/"+idToFileName(d.ID), datasetJSON, gptscript.WriteFileInWorkspaceOptions{
 		WorkspaceID: d.m.workspaceID,
 	}); err != nil {
 		return fmt.Errorf("failed to write dataset file: %w", err)
 	}
 	return nil
-}
-
-// toFileName converts a name to be alphanumeric plus underscores.
-func toFileName(name string) string {
-	return strings.Map(func(c rune) rune {
-		if !unicode.IsLetter(c) && !unicode.IsDigit(c) {
-			return '_'
-		}
-		return c
-	}, name)
 }

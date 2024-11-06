@@ -11,8 +11,7 @@ import (
 )
 
 const (
-	datasetFolder     = "datasets"
-	datasetMetaFolder = "datasets/meta"
+	datasetFolder = "datasets"
 )
 
 type Manager struct {
@@ -20,18 +19,18 @@ type Manager struct {
 	workspaceID     string
 }
 
-func NewManager() (Manager, error) {
+func NewManager(workspaceID string) (Manager, error) {
 	g, err := gptscript.NewGPTScript()
 	if err != nil {
 		return Manager{}, fmt.Errorf("failed to create GPTScript: %w", err)
 	}
 
-	return Manager{gptscriptClient: g}, nil
+	return Manager{gptscriptClient: g, workspaceID: workspaceID}, nil
 }
 
 func (m *Manager) ListDatasets(ctx context.Context) ([]DatasetMeta, error) {
 	files, err := m.gptscriptClient.ListFilesInWorkspace(ctx, gptscript.ListFilesInWorkspaceOptions{
-		Prefix:      datasetMetaFolder,
+		Prefix:      datasetFolder,
 		WorkspaceID: m.workspaceID,
 	})
 	if err != nil {
@@ -59,12 +58,12 @@ func (m *Manager) ListDatasets(ctx context.Context) ([]DatasetMeta, error) {
 }
 
 func (m *Manager) NewDataset(ctx context.Context, name, description string) (Dataset, error) {
-	randBytes := make([]byte, 16)
+	randBytes := make([]byte, 3)
 	if _, err := rand.Read(randBytes); err != nil {
 		return Dataset{}, fmt.Errorf("failed to generate random bytes: %w", err)
 	}
 
-	id := fmt.Sprintf("%x", randBytes)
+	id := fmt.Sprintf("gds://%x", randBytes)[:11]
 	d := Dataset{
 		DatasetMeta: DatasetMeta{
 			ID:          id,
@@ -80,7 +79,7 @@ func (m *Manager) NewDataset(ctx context.Context, name, description string) (Dat
 		return Dataset{}, fmt.Errorf("failed to marshal dataset: %w", err)
 	}
 
-	if err := m.gptscriptClient.WriteFileInWorkspace(ctx, datasetMetaFolder+"/"+id, datasetJSON, gptscript.WriteFileInWorkspaceOptions{
+	if err := m.gptscriptClient.WriteFileInWorkspace(ctx, datasetFolder+"/"+idToFileName(id), datasetJSON, gptscript.WriteFileInWorkspaceOptions{
 		WorkspaceID: m.workspaceID,
 	}); err != nil {
 		return Dataset{}, fmt.Errorf("failed to write dataset file: %w", err)
@@ -91,7 +90,8 @@ func (m *Manager) NewDataset(ctx context.Context, name, description string) (Dat
 }
 
 func (m *Manager) GetDataset(ctx context.Context, id string) (Dataset, error) {
-	data, err := m.gptscriptClient.ReadFileInWorkspace(ctx, datasetMetaFolder+"/"+id, gptscript.ReadFileInWorkspaceOptions{
+	fileName := idToFileName(id)
+	data, err := m.gptscriptClient.ReadFileInWorkspace(ctx, datasetFolder+"/"+fileName, gptscript.ReadFileInWorkspaceOptions{
 		WorkspaceID: m.workspaceID,
 	})
 	if err != nil {
@@ -103,28 +103,15 @@ func (m *Manager) GetDataset(ctx context.Context, id string) (Dataset, error) {
 
 	var d Dataset
 	if err = json.Unmarshal(data, &d); err != nil {
-		return Dataset{}, fmt.Errorf("failed to unmarshal dataset file %s: %w", datasetMetaFolder+"/"+id, err)
+		return Dataset{}, fmt.Errorf("failed to unmarshal dataset file %s: %w", datasetFolder+"/"+fileName, err)
 	}
 
 	d.m = m
 	return d, nil
 }
 
-func (m *Manager) EnsureUniqueElementFilename(ctx context.Context, datasetID, name string) (string, error) {
-	var counter int
-	uniqueName := name
-	for {
-		if _, err := m.gptscriptClient.ReadFileInWorkspace(ctx, datasetFolder+"/"+datasetID+"/"+uniqueName, gptscript.ReadFileInWorkspaceOptions{
-			WorkspaceID: m.workspaceID,
-		}); err == nil {
-			counter++
-			uniqueName = fmt.Sprintf("%s_%d", name, counter)
-		} else if !isNotFoundInWorkspaceError(err) {
-			return "", fmt.Errorf("failed to check if file exists: %w", err)
-		} else {
-			return datasetFolder + "/" + datasetID + "/" + uniqueName, nil
-		}
-	}
+func idToFileName(id string) string {
+	return id[6:] + ".gds"
 }
 
 func isNotFoundInWorkspaceError(err error) bool {

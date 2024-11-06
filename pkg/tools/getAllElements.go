@@ -1,70 +1,56 @@
 package tools
 
 import (
-	"context"
-	"encoding/base64"
 	"encoding/json"
-	"fmt"
-	"os"
+	"net/http"
 	"strings"
 
 	"github.com/gptscript-ai/datasets/pkg/dataset"
+	"github.com/gptscript-ai/datasets/pkg/util"
 )
 
-func GetAllElementsLLM(datasetID string) {
-	elems := getAllElements(datasetID)
-
-	var elemStrings []string
-	for _, e := range elems {
-		rawContents, err := base64.StdEncoding.DecodeString(e.Contents)
-		if err != nil {
-			rawContents = []byte(e.Contents)
-		}
-		elemStrings = append(elemStrings, fmt.Sprintf(`{"name": %q, "description": %q, "contents": %q}`, e.Name, e.Description, string(rawContents)))
-	}
-
-	fmt.Printf("[%s]", strings.Join(elemStrings, ","))
+type getAllElementsRequest struct {
+	DatasetID string `json:"datasetID"`
 }
 
-func GetAllElementsSDK(datasetID string) {
-	elems := getAllElements(datasetID)
-	elemsJSON, err := json.Marshal(elems)
-	if err != nil {
-		fmt.Printf("failed to marshal elements: %v\n", err)
-		os.Exit(1)
+func GetAllElements(w http.ResponseWriter, r *http.Request) {
+	var req getAllElementsRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
 	}
 
-	fmt.Println(string(elemsJSON))
-}
-
-func getAllElements(datasetID string) []elem {
-	m, err := dataset.NewManager()
-	if err != nil {
-		fmt.Printf("failed to create dataset manager: %v\n", err)
-		os.Exit(1)
+	if req.DatasetID == "" {
+		http.Error(w, "datasetID is required", http.StatusBadRequest)
+		return
 	}
 
-	d, err := m.GetDataset(context.Background(), datasetID)
+	workspaceID, err := util.GetWorkspaceID(r)
 	if err != nil {
-		fmt.Printf("failed to get dataset: %v\n", err)
-		os.Exit(1)
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
 	}
 
-	elements := d.ListElements()
-	var elems []elem
-	for _, e := range elements {
-		eBytes, _, err := d.GetElement(context.Background(), e.Name)
-		if err != nil {
-			fmt.Printf("failed to get element: %v\n", err)
-			os.Exit(1)
+	m, err := dataset.NewManager(workspaceID)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	d, err := m.GetDataset(r.Context(), req.DatasetID)
+	if err != nil {
+		if strings.Contains(err.Error(), "not found") {
+			http.Error(w, "dataset not found", http.StatusNotFound)
+			return
 		}
-
-		elems = append(elems, elem{
-			Contents:    string(eBytes),
-			Name:        e.Name,
-			Description: e.Description,
-		})
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
 	}
 
-	return elems
+	elements := d.GetAllElements()
+
+	if err := json.NewEncoder(w).Encode(elements); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 }

@@ -1,32 +1,36 @@
 package tools
 
 import (
-	"context"
 	"encoding/json"
 	"fmt"
+	"net/http"
 	"os"
 
 	"github.com/gptscript-ai/datasets/pkg/dataset"
+	"github.com/gptscript-ai/datasets/pkg/util"
 )
 
-func ListDatasets() {
-	m, err := dataset.NewManager()
+func ListDatasets(w http.ResponseWriter, r *http.Request) {
+	workspaceID, err := util.GetWorkspaceID(r)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	m, err := dataset.NewManager(workspaceID)
 	if err != nil {
 		fmt.Printf("failed to create dataset manager: %v\n", err)
 		os.Exit(1)
 	}
 
-	datasets, err := m.ListDatasets(context.Background())
+	datasets, err := m.ListDatasets(r.Context())
 	if err != nil {
 		fmt.Printf("failed to list datasets: %v\n", err)
 		os.Exit(1)
 	}
 
-	datasetsJSON, err := json.Marshal(datasets)
-	if err != nil {
-		fmt.Printf("failed to marshal datasets: %v\n", err)
-		os.Exit(1)
+	if err := json.NewEncoder(w).Encode(datasets); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
 	}
-
-	fmt.Print(string(datasetsJSON))
 }

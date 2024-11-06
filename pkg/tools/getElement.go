@@ -1,66 +1,68 @@
 package tools
 
 import (
-	"context"
-	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"net/http"
 	"os"
 
 	"github.com/gptscript-ai/datasets/pkg/dataset"
+	"github.com/gptscript-ai/datasets/pkg/util"
 )
 
-type elem struct {
-	Contents    string `json:"contents,omitempty"`
-	Name        string `json:"name"`
-	Description string `json:"description,omitempty"`
+type getElementRequest struct {
+	DatasetID string `json:"datasetID"`
+	Name      string `json:"name"`
 }
 
-func GetElementLLM(datasetID, elementName string) {
-	element := getElement(datasetID, elementName)
-	// Attempt to base64 decode the contents.
-	rawContents, err := base64.StdEncoding.DecodeString(element.Contents)
-	if err != nil {
-		// If it's not base64, just use the contents.
-		rawContents = []byte(element.Contents)
+func GetElement(w http.ResponseWriter, r *http.Request) {
+	var req getElementRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
 	}
 
-	fmt.Printf(`{"name": %q, "description": %q, "contents": %q}`, element.Name, element.Description, string(rawContents))
-}
-
-func GetElementSDK(datasetID, elementName string) {
-	element := getElement(datasetID, elementName)
-	elementJSON, err := json.Marshal(element)
-	if err != nil {
-		fmt.Printf("failed to marshal element: %v\n", err)
-		os.Exit(1)
+	if req.DatasetID == "" {
+		http.Error(w, "datasetID is required", http.StatusBadRequest)
+		return
+	} else if req.Name == "" {
+		http.Error(w, "name is required", http.StatusBadRequest)
+		return
 	}
 
-	fmt.Print(string(elementJSON))
-}
+	workspaceID, err := util.GetWorkspaceID(r)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
 
-func getElement(datasetID, elementName string) elem {
-	m, err := dataset.NewManager()
+	m, err := dataset.NewManager(workspaceID)
 	if err != nil {
 		fmt.Printf("failed to create dataset manager: %v\n", err)
 		os.Exit(1)
 	}
 
-	d, err := m.GetDataset(context.Background(), datasetID)
+	d, err := m.GetDataset(r.Context(), req.DatasetID)
 	if err != nil {
 		fmt.Printf("failed to get dataset: %v\n", err)
 		os.Exit(1)
 	}
 
-	elementContents, e, err := d.GetElement(context.Background(), elementName)
+	element, err := d.GetElement(req.Name)
 	if err != nil {
-		fmt.Printf("failed to get element: %v\n", err)
-		os.Exit(1)
+		http.Error(w, "element not found", http.StatusNotFound)
+		return
 	}
 
-	return elem{
-		Contents:    string(elementContents),
-		Name:        e.Name,
-		Description: e.Description,
+	// Remove the index from the element before returning it to the user.
+	eNoIndex := dataset.ElementNoIndex{
+		ElementMeta:    element.ElementMeta,
+		Contents:       element.Contents,
+		BinaryContents: element.BinaryContents,
+	}
+
+	if err := json.NewEncoder(w).Encode(eNoIndex); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
 	}
 }
