@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"os"
 
 	"github.com/gptscript-ai/datasets/pkg/dataset"
 	"github.com/gptscript-ai/datasets/pkg/util"
@@ -19,14 +18,14 @@ func ListDatasets(w http.ResponseWriter, r *http.Request) {
 
 	m, err := dataset.NewManager(workspaceID)
 	if err != nil {
-		fmt.Printf("failed to create dataset manager: %v\n", err)
-		os.Exit(1)
+		http.Error(w, fmt.Sprintf("failed to create dataset manager: %v\n", err), http.StatusInternalServerError)
+		return
 	}
 
 	datasets, err := m.ListDatasets(r.Context())
 	if err != nil {
-		fmt.Printf("failed to list datasets: %v\n", err)
-		os.Exit(1)
+		http.Error(w, fmt.Sprintf("failed to list datasets: %v\n", err), http.StatusInternalServerError)
+		return
 	}
 
 	if err := json.NewEncoder(w).Encode(datasets); err != nil {

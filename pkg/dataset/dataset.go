@@ -10,34 +10,35 @@ import (
 )
 
 type ElementMeta struct {
-	Name        string `json:"name"`
-	Description string `json:"description"`
+	Name        string `json:"name,omitempty"`
+	Description string `json:"description,omitempty"`
 }
 
 type Element struct {
 	ElementMeta    `json:",inline"`
-	Index          int    `json:"index"`
-	Contents       string `json:"contents"`
-	BinaryContents []byte `json:"binaryContents"`
+	Index          int    `json:"index,omitempty"`
+	Contents       string `json:"contents,omitempty"`
+	BinaryContents []byte `json:"binaryContents,omitempty"`
 }
 
 // ElementNoIndex is used for returning data to the user, since the user does not care about the index.
 type ElementNoIndex struct {
 	ElementMeta    `json:",inline"`
-	Contents       string `json:"contents"`
-	BinaryContents []byte `json:"binaryContents"`
+	Contents       string `json:"contents,omitempty"`
+	BinaryContents []byte `json:"binaryContents,omitempty"`
 }
 
 type DatasetMeta struct {
-	ID          string `json:"id"`
-	Name        string `json:"name"`
-	Description string `json:"description"`
+	ID          string `json:"id,omitempty"`
+	Name        string `json:"name,omitempty"`
+	Description string `json:"description,omitempty"`
 }
 
 type Dataset struct {
 	m           *Manager
 	DatasetMeta `json:",inline"`
-	Elements    map[string]Element `json:"elements"`
+	Elements    map[string]Element `json:"elements,omitempty"`
+	Truncated   bool               `json:"truncated,omitempty"`
 }
 
 func (d *Dataset) GetID() string {

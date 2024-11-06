@@ -25,6 +25,7 @@ func main() {
 	mux.HandleFunc("/listElements", tools.ListElements)
 	mux.HandleFunc("/getElement", tools.GetElement)
 	mux.HandleFunc("/listDatasets", tools.ListDatasets)
+	mux.HandleFunc("/outputFilter", tools.OutputFilter)
 	mux.HandleFunc("/", health)
 
 	srv := &http.Server{

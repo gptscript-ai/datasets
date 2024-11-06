@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"os"
 	"strings"
 
 	"github.com/gptscript-ai/datasets/pkg/dataset"
@@ -35,8 +34,8 @@ func ListElements(w http.ResponseWriter, r *http.Request) {
 
 	m, err := dataset.NewManager(workspaceID)
 	if err != nil {
-		fmt.Printf("failed to create dataset manager: %v\n", err)
-		os.Exit(1)
+		http.Error(w, fmt.Sprintf("failed to create dataset manager: %v\n", err), http.StatusInternalServerError)
+		return
 	}
 
 	d, err := m.GetDataset(r.Context(), req.DatasetID)
@@ -45,8 +44,8 @@ func ListElements(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, "dataset not found", http.StatusNotFound)
 			return
 		}
-		fmt.Printf("failed to get dataset: %v\n", err)
-		os.Exit(1)
+		http.Error(w, fmt.Sprintf("failed to get dataset: %v\n", err), http.StatusInternalServerError)
+		return
 	}
 
 	if err := json.NewEncoder(w).Encode(d.ListElements()); err != nil {
