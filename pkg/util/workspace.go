@@ -7,9 +7,8 @@ import (
 )
 
 func GetWorkspaceID(r *http.Request) (string, error) {
-	for _, pair := range strings.Split(r.Header.Get("X-GPTScript-Env"), ",") {
-		key, value, _ := strings.Cut(pair, "=")
-		if key == "GPTSCRIPT_WORKSPACE_ID" {
+	for _, kv := range r.Header.Values("X-GPTScript-Env") {
+		if value, ok := strings.CutPrefix(kv, "GPTSCRIPT_WORKSPACE_ID="); ok {
 			return value, nil
 		}
 	}
