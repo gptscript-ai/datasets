@@ -1,2 +1,14 @@
 Name: Datasets Output Filter
 Share Output Filters: Dataset Description Output Filter from ../tool.gpt
+
+---
+Name: Datasets Output Context
+type: context
+
+#!sys.echo
+
+## Dataset Output instructions
+
+When given a long list of items in a tool call response, always tell the user the total number of items when asked to interact with that list.
+
+## End of Dataset Output instructions
