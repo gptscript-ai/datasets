@@ -29,7 +29,7 @@ func main() {
 	mux.HandleFunc("/", health)
 
 	srv := &http.Server{
-		Addr:    ":" + os.Getenv("PORT"),
+		Addr:    "127.0.0.1:" + os.Getenv("PORT"),
 		Handler: mux,
 	}
 
