@@ -28,7 +28,7 @@ func main() {
 	mux.HandleFunc("POST /getElement", authenticatedHandler(tools.GetElement))
 	mux.HandleFunc("POST /listDatasets", authenticatedHandler(tools.ListDatasets))
 	mux.HandleFunc("POST /outputFilter", authenticatedHandler(tools.OutputFilter))
-	mux.HandleFunc("/", health)
+	mux.HandleFunc("GET /{$}", health)
 
 	srv := &http.Server{
 		Addr:    "127.0.0.1:" + os.Getenv("PORT"),
