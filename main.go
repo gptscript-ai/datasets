@@ -13,6 +13,8 @@ import (
 	"github.com/gptscript-ai/datasets/pkg/tools"
 )
 
+var tokenFromEnv = os.Getenv("GPTSCRIPT_DAEMON_TOKEN")
+
 func main() {
 	if os.Getenv("PORT") == "" {
 		fmt.Println("PORT is not set")
@@ -20,13 +22,13 @@ func main() {
 	}
 
 	mux := http.NewServeMux()
-	mux.HandleFunc("/addElements", tools.AddElements)
-	mux.HandleFunc("/getAllElements", tools.GetAllElements)
-	mux.HandleFunc("/listElements", tools.ListElements)
-	mux.HandleFunc("/getElement", tools.GetElement)
-	mux.HandleFunc("/listDatasets", tools.ListDatasets)
-	mux.HandleFunc("/outputFilter", tools.OutputFilter)
-	mux.HandleFunc("/", health)
+	mux.HandleFunc("POST /addElements", authenticatedHandler(tools.AddElements))
+	mux.HandleFunc("POST /getAllElements", authenticatedHandler(tools.GetAllElements))
+	mux.HandleFunc("POST /listElements", authenticatedHandler(tools.ListElements))
+	mux.HandleFunc("POST /getElement", authenticatedHandler(tools.GetElement))
+	mux.HandleFunc("POST /listDatasets", authenticatedHandler(tools.ListDatasets))
+	mux.HandleFunc("POST /outputFilter", authenticatedHandler(tools.OutputFilter))
+	mux.HandleFunc("GET /{$}", health)
 
 	srv := &http.Server{
 		Addr:    "127.0.0.1:" + os.Getenv("PORT"),
@@ -53,4 +55,18 @@ func main() {
 
 func health(w http.ResponseWriter, _ *http.Request) {
 	w.Write([]byte("ok"))
+}
+
+func authenticatedHandler(next http.HandlerFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if !authenticate(r.Header) {
+			http.Error(w, "unauthorized", http.StatusUnauthorized)
+			return
+		}
+		next(w, r)
+	}
+}
+
+func authenticate(headers http.Header) bool {
+	return headers.Get("X-GPTScript-Daemon-Token") == tokenFromEnv
 }
