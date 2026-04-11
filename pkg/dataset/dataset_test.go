@@ -18,9 +18,7 @@ func TestDatasets(t *testing.T) {
 	require.NoError(t, err)
 	t.Logf("workspace ID: %s", workspaceID)
 
-	defer g.DeleteWorkspace(ctx, gptscript.DeleteWorkspaceOptions{
-		WorkspaceID: workspaceID,
-	})
+	defer g.DeleteWorkspace(ctx, workspaceID)
 
 	m, err := NewManager(workspaceID)
 	require.NoError(t, err)
@@ -28,10 +26,10 @@ func TestDatasets(t *testing.T) {
 	m.workspaceID = workspaceID
 
 	t.Cleanup(func() {
-		_ = m.gptscriptClient.DeleteWorkspace(ctx)
+		_ = m.gptscriptClient.DeleteWorkspace(ctx, workspaceID)
 	})
 
-	dataset, err := m.NewDataset(ctx)
+	dataset, err := m.NewDataset(ctx, "test-dataset", "A test dataset")
 	require.NoError(t, err)
 	require.Equal(t, 0, dataset.GetLength())
 
